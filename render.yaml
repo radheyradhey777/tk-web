@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: ticket-system
+    env: python
+    plan: free
+    buildCommand: ""
+    startCommand: python app.py
+    envVars:
+      - key: DISCORD_WEBHOOK_URL
+        value: https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_TOKEN
