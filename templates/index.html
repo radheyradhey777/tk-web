@@ -7,7 +7,7 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background: #2a00b7; /* purple-blue background */
+            background: #2a00b7;
             margin: 0;
             padding: 0;
             color: #fff;
@@ -16,7 +16,7 @@
         .container {
             max-width: 600px;
             margin: 40px auto;
-            background: #1e0033; /* dark container */
+            background: #1e0033;
             padding: 30px;
             border-radius: 12px;
             box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4);
@@ -72,10 +72,9 @@
             background-color: #a368ff;
         }
 
-        /* --- Modified Success Message Style --- */
         .success {
-            background-color: #1a382c; /* Dark green background */
-            border: 1px solid #4fff6b;   /* Bright green border */
+            background-color: #1a382c;
+            border: 1px solid #4fff6b;
             border-radius: 8px;
             padding: 20px;
             text-align: center;
@@ -120,7 +119,6 @@
             color: #ffffff;
         }
 
-
         @media (max-width: 600px) {
             .container {
                 margin: 20px;
@@ -153,15 +151,13 @@
 
             <label for="contact">Preferred Contact Method</label>
             <select name="contact" required>
-                <option value="Discord">Discord</option>
-                <option value="Telegram">Telegram</option>
-                <option value="Instagram">Instagram</option>
-                <option value="WhatsApp">WhatsApp</option>
+                <option value="Discord">Discord Username</option>
+                <option value="WhatsApp">WhatsApp Number</option>
                 <option value="Mobile">Mobile Number</option>
             </select>
 
             <label for="contact_value">Your ID / Number</label>
-            <input type="text" name="contact_value" placeholder="Enter your username | Link | Number" required>
+            <input type="text" name="contact_value" placeholder="Enter Discord username, WhatsApp number, or mobile" required>
 
             <label for="product">Product Name</label>
             <input type="text" name="product" placeholder="e.g. Bot Hosting Basic Plan" required>
@@ -169,7 +165,7 @@
             <label for="payment">Payment Method</label>
             <select name="payment" required>
                 <option value="UPI (Fampay, GPay, etc)">UPI (Fampay, GPay, etc)</option>
-                <option value="Crypto USDT LTC ">Crypto (Popular Coins)</option>
+                <option value="Crypto USDT LTC">Crypto (Popular Coins)</option>
             </select>
 
             <button type="submit" class="submit-btn">Submit Ticket</button>
@@ -179,9 +175,7 @@
     <footer>
         <p>Connect with us</p>
         <a href="https://discord.gg/UWhcwAUdN6" target="_blank" rel="noopener noreferrer">Discord</a>
-        <a href="https://www.instagram.com/coramtix?igsh=MTB4aXA0MXhpdGszdw==" target="_blank" rel="noopener noreferrer">Instagram</a>
         <a href="https://wa.me/message/no" target="_blank" rel="noopener noreferrer">WhatsApp</a>
     </footer>
-
 </body>
 </html>
