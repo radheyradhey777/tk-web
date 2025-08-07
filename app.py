@@ -3,28 +3,35 @@ import requests
 import os
 
 app = Flask(__name__)
-
-DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")  # Secure method
+DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
 
 @app.route('/', methods=['GET', 'POST'])
 def form():
     if request.method == 'POST':
-        product = request.form['product_name']
-        price = request.form['price']
-        contact = request.form['contact_details']
+        # Anti-spam honeypot check
+        if request.form.get("bot_field"):
+            return "❌ Spam detected."
+
+        product = request.form.get('product_name')
+        price = request.form.get('price')
+        contact_type = request.form.get('contact_type')
+        contact_value = request.form.get('contact_value')
 
         content = (
             "**📦 New Ticket Submitted**\n"
-            f"**Product Name:** {product}\n"
+            f"**Product:** {product}\n"
             f"**Price:** {price}\n"
-            f"**Contact Details:**\n```{contact}```"
+            f"**Contact ({contact_type}):** `{contact_value}`"
         )
 
         # Send to Discord
-        requests.post(DISCORD_WEBHOOK_URL, json={"content": content})
+        try:
+            requests.post(DISCORD_WEBHOOK_URL, json={"content": content})
+        except:
+            return "❌ Failed to send to Discord."
 
-        return "✅ Ticket submitted successfully!"
+        return "✅ Ticket sent to Discord!"
     return render_template('form.html')
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=10000)  # Required for Render
+    app.run(host='0.0.0.0', port=10000)
