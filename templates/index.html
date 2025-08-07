@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Create Ticket</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Create a Support Ticket</h1>
+    <form method="POST">
+      <input type="text" name="honeypot" style="display:none">
+
+      <label>Name</label>
+      <input type="text" name="name" required>
+
+      <label>Email</label>
+      <input type="email" name="email" required>
+
+      <label>Contact Method</label>
+      <select name="contact" required>
+        <option value="Discord">Discord</option>
+        <option value="Telegram">Telegram</option>
+        <option value="WhatsApp">WhatsApp</option>
+        <option value="Instagram">Instagram</option>
+        <option value="Phone">Mobile Number</option>
+      </select>
+
+      <label>Contact Info</label>
+      <input type="text" name="contact_value" required>
+
+      <button type="submit">Submit Ticket</button>
+    </form>
+
+    {% if request.args.get('success') %}
+      <p class="success">🎉 Ticket submitted successfully!</p>
+    {% endif %}
+  </div>
+</body>
+</html>
