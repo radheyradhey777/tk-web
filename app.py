@@ -26,7 +26,7 @@ def form():
         user_ip = request.remote_addr
         current_time = time.time()
 
-        # Check cooldown
+        # Cooldown logic
         if user_ip in ip_log:
             time_diff = current_time - ip_log[user_ip]
             if time_diff < COOLDOWN_SECONDS:
@@ -38,7 +38,7 @@ def form():
         contact_method = request.form.get("contact")
         contact_value = request.form.get("contact_value")
 
-        # Prepare Discord message
+        # Build Discord webhook content
         content = (
             f"📩 **New Ticket Submitted**\n\n"
             f"👤 **Name:** {name}\n"
@@ -52,7 +52,7 @@ def form():
         except Exception as e:
             return f"Error sending to Discord: {e}", 500
 
-        # Save IP with current time
+        # Save IP and time
         ip_log[user_ip] = current_time
         with open(IP_LOG_FILE, "w") as f:
             json.dump(ip_log, f)
@@ -60,3 +60,8 @@ def form():
         return redirect("/?success=1")
 
     return render_template("index.html")
+
+# ✅ REQUIRED for Render 24/7 hosting
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
