@@ -7,23 +7,24 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background: #f4f6f8;
+            background: #2a00b7; /* purple-blue background */
             margin: 0;
             padding: 0;
+            color: #fff;
         }
 
         .container {
             max-width: 600px;
             margin: 40px auto;
-            background: #fff;
+            background: #1e0033; /* dark container */
             padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4);
         }
 
         h2 {
             text-align: center;
-            color: #333;
+            color: #ffffff;
             margin-bottom: 20px;
         }
 
@@ -31,16 +32,23 @@
             display: block;
             margin-top: 15px;
             font-weight: bold;
-            color: #444;
+            color: #cccccc;
         }
 
-        form input, form select {
+        form input,
+        form select {
             width: 100%;
-            padding: 10px;
+            padding: 12px;
             margin-top: 6px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
+            border: 1px solid #444;
+            border-radius: 8px;
+            background-color: #2d2d4d;
+            color: #fff;
             box-sizing: border-box;
+        }
+
+        form input::placeholder {
+            color: #bbb;
         }
 
         .honeypot {
@@ -48,24 +56,25 @@
         }
 
         .submit-btn {
-            background-color: #007bff;
+            background-color: #7b37ff;
             color: #fff;
             border: none;
-            padding: 12px;
+            padding: 14px;
             margin-top: 20px;
-            border-radius: 6px;
+            border-radius: 8px;
             cursor: pointer;
             width: 100%;
             font-size: 16px;
+            transition: background-color 0.3s ease;
         }
 
         .submit-btn:hover {
-            background-color: #0056b3;
+            background-color: #a368ff;
         }
 
         .success {
             text-align: center;
-            color: green;
+            color: #4fff6b;
             margin-bottom: 15px;
             font-weight: bold;
         }
@@ -106,7 +115,7 @@
             </select>
 
             <label for="contact_value">Your ID / Number</label>
-            <input type="text" name="contact_value" placeholder="Enter your Discord/Telegram/etc." required>
+            <input type="text" name="contact_value" placeholder="Enter your username | Link | Number" required>
 
             <label for="product">Product Name</label>
             <input type="text" name="product" placeholder="e.g. Bot Hosting Basic Plan" required>
@@ -114,7 +123,7 @@
             <label for="payment">Payment Method</label>
             <select name="payment" required>
                 <option value="UPI (Fampay, GPay, etc)">UPI (Fampay, GPay, etc)</option>
-                <option value="Crypto (Popular Coins)">Crypto (Popular Coins)</option>
+                <option value="Crypto USDT LTC ">Crypto (Popular Coins)</option>
             </select>
 
             <button type="submit" class="submit-btn">Submit Ticket</button>
