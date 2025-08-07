@@ -1,41 +1,124 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Create Ticket</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="/static/style.css">
+    <meta charset="UTF-8">
+    <title>CoRamTix | Submit Ticket</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 40px auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        form label {
+            display: block;
+            margin-top: 15px;
+            font-weight: bold;
+            color: #444;
+        }
+
+        form input, form select {
+            width: 100%;
+            padding: 10px;
+            margin-top: 6px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+
+        .honeypot {
+            display: none;
+        }
+
+        .submit-btn {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            padding: 12px;
+            margin-top: 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+        }
+
+        .submit-btn:hover {
+            background-color: #0056b3;
+        }
+
+        .success {
+            text-align: center;
+            color: green;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                margin: 20px;
+                padding: 20px;
+            }
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Create a Support Ticket</h1>
-    <form method="POST">
-      <input type="text" name="honeypot" style="display:none">
+    <div class="container">
+        <h2>🎟️ Submit a Ticket</h2>
 
-      <label>Name</label>
-      <input type="text" name="name" required>
+        {% if request.args.get('success') %}
+            <div class="success">✅ Ticket submitted successfully!</div>
+        {% endif %}
 
-      <label>Email</label>
-      <input type="email" name="email" required>
+        <form method="POST">
+            <!-- Honeypot field for spam bots -->
+            <input type="text" name="honeypot" class="honeypot">
 
-      <label>Contact Method</label>
-      <select name="contact" required>
-        <option value="Discord">Discord</option>
-        <option value="Telegram">Telegram</option>
-        <option value="WhatsApp">WhatsApp</option>
-        <option value="Instagram">Instagram</option>
-        <option value="Phone">Mobile Number</option>
-      </select>
+            <label for="name">Your Name</label>
+            <input type="text" name="name" placeholder="Enter your name" required>
 
-      <label>Contact Info</label>
-      <input type="text" name="contact_value" required>
+            <label for="email">Email Address</label>
+            <input type="email" name="email" placeholder="Enter your email" required>
 
-      <button type="submit">Submit Ticket</button>
-    </form>
+            <label for="contact">Preferred Contact Method</label>
+            <select name="contact" required>
+                <option value="Discord">Discord</option>
+                <option value="Telegram">Telegram</option>
+                <option value="Instagram">Instagram</option>
+                <option value="WhatsApp">WhatsApp</option>
+                <option value="Mobile">Mobile Number</option>
+            </select>
 
-    {% if request.args.get('success') %}
-      <p class="success">🎉 Ticket submitted successfully!</p>
-    {% endif %}
-  </div>
+            <label for="contact_value">Your ID / Number</label>
+            <input type="text" name="contact_value" placeholder="Enter your Discord/Telegram/etc." required>
+
+            <label for="product">Product Name</label>
+            <input type="text" name="product" placeholder="e.g. Bot Hosting Basic Plan" required>
+
+            <label for="payment">Payment Method</label>
+            <select name="payment" required>
+                <option value="UPI (Fampay, GPay, etc)">UPI (Fampay, GPay, etc)</option>
+                <option value="Crypto (Popular Coins)">Crypto (Popular Coins)</option>
+            </select>
+
+            <button type="submit" class="submit-btn">Submit Ticket</button>
+        </form>
+    </div>
 </body>
 </html>
