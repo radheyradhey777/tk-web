@@ -4,15 +4,14 @@ import os
 
 app = Flask(__name__)
 
-# Replace with your actual webhook
-DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
+DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")  # Secure method
 
 @app.route('/', methods=['GET', 'POST'])
-def ticket_form():
+def form():
     if request.method == 'POST':
-        product = request.form.get('product_name')
-        price = request.form.get('price')
-        contact = request.form.get('contact_details')
+        product = request.form['product_name']
+        price = request.form['price']
+        contact = request.form['contact_details']
 
         content = (
             "**📦 New Ticket Submitted**\n"
@@ -21,13 +20,11 @@ def ticket_form():
             f"**Contact Details:**\n```{contact}```"
         )
 
-        data = {"content": content}
+        # Send to Discord
+        requests.post(DISCORD_WEBHOOK_URL, json={"content": content})
 
-        # Send to Discord via webhook
-        requests.post(DISCORD_WEBHOOK_URL, json=data)
-
-        return "✅ Ticket submitted and sent to Discord!"
+        return "✅ Ticket submitted successfully!"
     return render_template('form.html')
 
 if __name__ == '__main__':
-    app.run()
+    app.run(host='0.0.0.0', port=10000)  # Required for Render
