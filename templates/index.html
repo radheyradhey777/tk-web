@@ -51,6 +51,16 @@
             color: #bbb;
         }
 
+        select optgroup {
+            font-weight: bold;
+            color: #aaa;
+        }
+
+        select option {
+            color: #fff;
+            background-color: #2d2d4d;
+        }
+
         .honeypot {
             display: none;
         }
@@ -151,9 +161,15 @@
 
             <label for="contact">Preferred Contact Method</label>
             <select name="contact" required>
-                <option value="Discord">Discord Username</option>
-                <option value="WhatsApp">WhatsApp Number</option>
-                <option value="Mobile">Mobile Number</option>
+                <optgroup label="Discord">
+                    <option value="Discord Username">Discord Username</option>
+                </optgroup>
+                <optgroup label="WhatsApp">
+                    <option value="WhatsApp Number">WhatsApp Number</option>
+                </optgroup>
+                <optgroup label="Mobile">
+                    <option value="Mobile Number">Mobile Number</option>
+                </optgroup>
             </select>
 
             <label for="contact_value">Your ID / Number</label>
