@@ -1,37 +1,93 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
   <title>Submit Ticket</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body { font-family: Arial; background: #f0f0f0; padding: 50px; }
+    body {
+      background: #eef4ff;
+      font-family: Arial, sans-serif;
+      padding: 30px;
+    }
+
     form {
-      background: #fff; padding: 20px; max-width: 500px;
-      margin: auto; border-radius: 10px; box-shadow: 0 0 10px #ccc;
+      max-width: 500px;
+      margin: auto;
+      background: #fff;
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
-    input, textarea, button {
-      width: 100%; margin-top: 10px; padding: 10px;
-      border: 1px solid #ccc; border-radius: 5px;
+
+    h2 {
+      text-align: center;
+      color: #3358cc;
     }
+
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: bold;
+      color: #003366;
+    }
+
+    input, select, textarea, button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 5px;
+      border: 1px solid #cdd3e0;
+      border-radius: 6px;
+      font-size: 16px;
+    }
+
     button {
-      background: #5865F2; color: white; font-weight: bold; border: none;
+      background-color: #3358cc;
+      color: white;
+      border: none;
+      margin-top: 20px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #2549b2;
+    }
+
+    /* Anti-spam hidden field */
+    .hidden {
+      display: none;
     }
   </style>
 </head>
 <body>
 
-<h2 style="text-align:center;">📝 Submit Ticket</h2>
-<form method="POST">
-  <label>Product Name:</label>
-  <input type="text" name="product_name" required>
+  <form method="POST">
+    <h2>📝 Submit a Ticket</h2>
 
-  <label>Price:</label>
-  <input type="text" name="price" required>
+    <label>Product Name</label>
+    <input type="text" name="product_name" required>
 
-  <label>Contact Details:</label>
-  <textarea name="contact_details" required></textarea>
+    <label>Price</label>
+    <input type="text" name="price" required>
 
-  <button type="submit">Send to Discord</button>
-</form>
+    <label>Contact Type</label>
+    <select name="contact_type" required>
+      <option value="Discord">Discord</option>
+      <option value="Telegram">Telegram</option>
+      <option value="Instagram">Instagram</option>
+      <option value="WhatsApp">WhatsApp</option>
+      <option value="Mobile">Mobile</option>
+    </select>
+
+    <label>Contact Value (e.g., username or number)</label>
+    <input type="text" name="contact_value" required>
+
+    <!-- Anti-spam field (honeypot) -->
+    <input type="text" name="bot_field" class="hidden" autocomplete="off">
+
+    <button type="submit">Submit Ticket</button>
+  </form>
 
 </body>
 </html>
