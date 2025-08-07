@@ -1,37 +1,62 @@
-from flask import Flask, request, render_template
-import requests
-import os
+from flask import Flask, render_template, request, redirect
+import os, requests, json, time
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = Flask(__name__)
-DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
+WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
 
-@app.route('/', methods=['GET', 'POST'])
+COOLDOWN_SECONDS = 5 * 24 * 60 * 60  # 5 days
+IP_LOG_FILE = "ip_log.json"
+
+# Load existing IP logs
+if os.path.exists(IP_LOG_FILE):
+    with open(IP_LOG_FILE, "r") as f:
+        ip_log = json.load(f)
+else:
+    ip_log = {}
+
+@app.route("/", methods=["GET", "POST"])
 def form():
-    if request.method == 'POST':
-        # Anti-spam honeypot check
-        if request.form.get("bot_field"):
-            return "❌ Spam detected."
+    if request.method == "POST":
+        if request.form.get("honeypot"):  # Anti-spam honeypot
+            return "Spam detected.", 400
 
-        product = request.form.get('product_name')
-        price = request.form.get('price')
-        contact_type = request.form.get('contact_type')
-        contact_value = request.form.get('contact_value')
+        user_ip = request.remote_addr
+        current_time = time.time()
 
+        # Check cooldown
+        if user_ip in ip_log:
+            time_diff = current_time - ip_log[user_ip]
+            if time_diff < COOLDOWN_SECONDS:
+                remaining_days = int((COOLDOWN_SECONDS - time_diff) // 86400)
+                return f"❌ You can only submit one ticket every 5 days. Try again in {remaining_days} day(s).", 429
+
+        name = request.form.get("name")
+        email = request.form.get("email")
+        contact_method = request.form.get("contact")
+        contact_value = request.form.get("contact_value")
+
+        # Prepare Discord message
         content = (
-            "**📦 New Ticket Submitted**\n"
-            f"**Product:** {product}\n"
-            f"**Price:** {price}\n"
-            f"**Contact ({contact_type}):** `{contact_value}`"
+            f"📩 **New Ticket Submitted**\n\n"
+            f"👤 **Name:** {name}\n"
+            f"📧 **Email:** {email}\n"
+            f"🔗 **Contact ({contact_method}):** {contact_value}\n"
+            f"🌐 **IP Address:** {user_ip}"
         )
 
-        # Send to Discord
         try:
-            requests.post(DISCORD_WEBHOOK_URL, json={"content": content})
-        except:
-            return "❌ Failed to send to Discord."
+            requests.post(WEBHOOK_URL, json={"content": content})
+        except Exception as e:
+            return f"Error sending to Discord: {e}", 500
 
-        return "✅ Ticket sent to Discord!"
-    return render_template('form.html')
+        # Save IP with current time
+        ip_log[user_ip] = current_time
+        with open(IP_LOG_FILE, "w") as f:
+            json.dump(ip_log, f)
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=10000)
+        return redirect("/?success=1")
+
+    return render_template("index.html")
