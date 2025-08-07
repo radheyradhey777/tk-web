@@ -7,4 +7,4 @@ services:
     startCommand: python app.py
     envVars:
       - key: DISCORD_WEBHOOK_URL
-        value: https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_TOKEN
+        value: https://discord.com/api/webhooks/1401481441673740331/38Ij4PE0Ce0__gknAIgXSu7TOWfM34B-p5eU9v162CyIqyX6jR8YWH9NcmHSiK_kX-F_
