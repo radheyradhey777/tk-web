@@ -160,7 +160,7 @@
             <input type="email" name="email" placeholder="Enter your email" required>
 
             <label for="contact">Preferred Contact Method</label>
-            <select name="contact" required>
+            <select name="contact" id="contact-method" required onchange="updateContactField()">
                 <optgroup label="Discord">
                     <option value="Discord Username">Discord Username</option>
                 </optgroup>
@@ -172,8 +172,8 @@
                 </optgroup>
             </select>
 
-            <label for="contact_value">Your ID / Number</label>
-            <input type="text" name="contact_value" placeholder="Enter Discord username, WhatsApp number, or mobile" required>
+            <label for="contact_value" id="contact-label">Your ID / Number</label>
+            <input type="text" name="contact_value" id="contact-input" placeholder="Enter Discord username, WhatsApp number, or mobile" required>
 
             <label for="product">Product Name</label>
             <input type="text" name="product" placeholder="e.g. Bot Hosting Basic Plan" required>
@@ -193,5 +193,32 @@
         <a href="https://discord.gg/UWhcwAUdN6" target="_blank" rel="noopener noreferrer">Discord</a>
         <a href="https://wa.me/message/no" target="_blank" rel="noopener noreferrer">WhatsApp</a>
     </footer>
+
+    <script>
+        function updateContactField() {
+            const select = document.getElementById("contact-method");
+            const selected = select.options[select.selectedIndex].value;
+
+            const label = document.getElementById("contact-label");
+            const input = document.getElementById("contact-input");
+
+            if (selected === "Discord Username") {
+                label.textContent = "Discord Username";
+                input.placeholder = "Enter your Discord Username";
+            } else if (selected === "WhatsApp Number") {
+                label.textContent = "WhatsApp Number";
+                input.placeholder = "Enter your WhatsApp Number";
+            } else if (selected === "Mobile Number") {
+                label.textContent = "Mobile Number";
+                input.placeholder = "Enter your Mobile Number";
+            } else {
+                label.textContent = "Your ID / Number";
+                input.placeholder = "Enter your contact detail";
+            }
+        }
+
+        // Trigger once on page load to set correct label/placeholder
+        window.onload = updateContactField;
+    </script>
 </body>
 </html>
