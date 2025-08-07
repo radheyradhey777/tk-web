@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>CoRamTix | Submit Ticket</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -13,7 +14,7 @@
             color: #fff;
         }
 
-        .container {
+        .form-container {
             max-width: 600px;
             margin: 40px auto;
             background: #1e0033;
@@ -106,31 +107,8 @@
             line-height: 1.5;
         }
 
-        footer {
-            text-align: center;
-            margin-top: 30px;
-            padding-bottom: 20px;
-        }
-
-        footer p {
-            color: #cccccc;
-            margin-bottom: 15px;
-        }
-
-        footer a {
-            color: #a368ff;
-            text-decoration: none;
-            margin: 0 15px;
-            font-weight: bold;
-            transition: color 0.3s ease;
-        }
-
-        footer a:hover {
-            color: #ffffff;
-        }
-
         @media (max-width: 600px) {
-            .container {
+            .form-container {
                 margin: 20px;
                 padding: 20px;
             }
@@ -138,7 +116,7 @@
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="form-container">
         <h2>🎟️ Submit a Ticket</h2>
 
         {% if request.args.get('success') %}
@@ -160,7 +138,7 @@
             <input type="email" name="email" placeholder="Enter your email" required>
 
             <label for="contact">Preferred Contact Method</label>
-            <select name="contact" id="contact-method" required onchange="updateContactField()">
+            <select name="contact" id="contact-method" required>
                 <optgroup label="Discord">
                     <option value="Discord Username">Discord Username</option>
                 </optgroup>
@@ -188,37 +166,53 @@
         </form>
     </div>
 
-    <footer>
-        <p>Connect with us</p>
-        <a href="https://discord.gg/UWhcwAUdN6" target="_blank" rel="noopener noreferrer">Discord</a>
-        <a href="https://wa.me/message/no" target="_blank" rel="noopener noreferrer">WhatsApp</a>
+    <footer class="bg-gray-800 text-white">
+        <div class="container mx-auto px-6 py-12">
+          <nav class="flex justify-center flex-wrap gap-x-6 gap-y-2 mb-8">
+            <a href="https://coramtix.in/terms-of-service" class="text-gray-400 hover:text-white">Terms of service</a>
+            <a href="https://coramtix.in/privacy-policy" class="text-gray-400 hover:text-white">Privacy policy</a>
+            <a href="https://coramtix.in/refund-policy" class="text-gray-400 hover:text-white">Refund policy</a>
+          </nav>
+          <div class="text-center text-gray-500 border-t border-gray-700 pt-8">
+            <p>&copy; <span id="copyright-year"></span> CoRamTix — Premium Server Hosting</p>
+          </div>
+        </div>
     </footer>
 
     <script>
-        function updateContactField() {
-            const select = document.getElementById("contact-method");
-            const selected = select.options[select.selectedIndex].value;
+        document.addEventListener('DOMContentLoaded', () => {
+            function updateContactField() {
+                const select = document.getElementById("contact-method");
+                const selected = select.options[select.selectedIndex].value;
 
-            const label = document.getElementById("contact-label");
-            const input = document.getElementById("contact-input");
+                const label = document.getElementById("contact-label");
+                const input = document.getElementById("contact-input");
 
-            if (selected === "Discord Username") {
-                label.textContent = "Discord Username";
-                input.placeholder = "Enter your Discord Username";
-            } else if (selected === "WhatsApp Number") {
-                label.textContent = "WhatsApp Number";
-                input.placeholder = "Enter your WhatsApp Number";
-            } else if (selected === "Mobile Number") {
-                label.textContent = "Mobile Number";
-                input.placeholder = "Enter your Mobile Number";
-            } else {
-                label.textContent = "Your ID / Number";
-                input.placeholder = "Enter your contact detail";
+                if (selected === "Discord Username") {
+                    label.textContent = "Discord Username";
+                    input.placeholder = "Enter your Discord Username";
+                } else if (selected === "WhatsApp Number") {
+                    label.textContent = "WhatsApp Number";
+                    input.placeholder = "Enter your WhatsApp Number";
+                } else if (selected === "Mobile Number") {
+                    label.textContent = "Mobile Number";
+                    input.placeholder = "Enter your Mobile Number";
+                } else {
+                    label.textContent = "Your ID / Number";
+                    input.placeholder = "Enter your contact detail";
+                }
             }
-        }
+            
+            // Initial call
+            updateContactField();
 
-        // Trigger once on page load to set correct label/placeholder
-        window.onload = updateContactField;
+            // Add event listener for changes
+            document.getElementById('contact-method').addEventListener('change', updateContactField);
+
+            // Set copyright year
+            document.getElementById('copyright-year').textContent = new Date().getFullYear();
+        });
     </script>
 </body>
-</html>
+    </html>
+                
