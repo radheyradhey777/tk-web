@@ -72,11 +72,29 @@
             background-color: #a368ff;
         }
 
+        /* --- Modified Success Message Style --- */
         .success {
+            background-color: #1a382c; /* Dark green background */
+            border: 1px solid #4fff6b;   /* Bright green border */
+            border-radius: 8px;
+            padding: 20px;
             text-align: center;
-            color: #4fff6b;
-            margin-bottom: 15px;
+            margin-bottom: 25px;
+        }
+
+        .success-heading {
+            color: #ffffff;
+            font-size: 1.2em;
             font-weight: bold;
+            margin: 0 0 10px 0;
+        }
+
+        .success-details {
+            color: #cccccc;
+            font-size: 0.95em;
+            font-weight: normal;
+            margin: 0;
+            line-height: 1.5;
         }
 
         footer {
@@ -116,7 +134,12 @@
         <h2>🎟️ Submit a Ticket</h2>
 
         {% if request.args.get('success') %}
-            <div class="success">✅ Ticket submitted successfully!</div>
+            <div class="success">
+                <div class="success-heading">✅ Success! Your Ticket is Submitted.</div>
+                <p class="success-details">
+                    Our support team will review your request and contact you shortly. Please allow up to 24 hours for a response.
+                </p>
+            </div>
         {% endif %}
 
         <form method="POST">
