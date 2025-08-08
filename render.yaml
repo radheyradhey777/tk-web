@@ -1,12 +1,10 @@
 services:
   - type: web
-    name: flask-discord-ticket
+    name: my-app
     env: python
     plan: free
     buildCommand: pip install -r requirements.txt
     startCommand: python app.py
     envVars:
-      - key: DISCORD_BOT_TOKEN
-        value: MTM4MTMyODM2MzA1MzkxMjA3NA.G3NERW.u2k4yfPQIPidupvq3dopKL9Ytp5u3mP6ZcMpWI
-      - key: DISCORD_CHANNEL_ID
-        value: 1397108793036374097
+      - key: PYTHON_VERSION
+        value: 3.11.9
