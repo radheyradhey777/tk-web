@@ -1,73 +1,66 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Submit Order / Ticket</title>
+    <meta charset="UTF-8">
+    <title>Submit Ticket | CoRamTix</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         body {
+            background: #f5f7fa;
             font-family: Arial, sans-serif;
-            background: #f4f4f4;
-            padding: 20px;
+            display: flex;
+            justify-content: center;
+            padding-top: 40px;
         }
         form {
             background: white;
-            padding: 20px;
+            padding: 30px;
             border-radius: 8px;
-            max-width: 600px;
-            margin: auto;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 500px;
         }
         input, textarea, select {
             width: 100%;
-            padding: 8px;
-            margin: 8px 0 16px;
+            padding: 10px;
+            margin-top: 8px;
+            margin-bottom: 16px;
+            border-radius: 5px;
             border: 1px solid #ccc;
-            border-radius: 4px;
         }
         button {
             background: #2ecc71;
-            border: none;
-            padding: 12px;
             color: white;
-            font-size: 16px;
-            border-radius: 4px;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
             cursor: pointer;
+            width: 100%;
         }
-        h2 {
-            text-align: center;
+        button:hover {
+            background: #27ae60;
         }
     </style>
 </head>
 <body>
     <form method="POST">
-        <h2>📝 Submit Order / Ticket</h2>
-
-        <label>Your Full Name</label>
-        <input name="full_name" required>
-
-        <label>Email</label>
-        <input type="email" name="email" required>
-
-        <label>Mobile Number</label>
-        <input name="mobile" required>
-
-        <label>Product Name</label>
-        <input name="product" required>
-
-        <label>Payment Method</label>
+        <h2>🎟️ Submit Your Ticket</h2>
+        <input type="text" name="full_name" placeholder="Your Full Name" required>
+        <input type="email" name="email" placeholder="Email Address" required>
+        <input type="text" name="mobile" placeholder="Mobile Number" required>
+        <input type="text" name="product" placeholder="Product Name" required>
+        
         <select name="payment_method" required>
+            <option value="">Select Payment Method</option>
             <option value="UPI">UPI</option>
-            <option value="GPay">GPay</option>
             <option value="Paytm">Paytm</option>
             <option value="PhonePe">PhonePe</option>
-            <option value="FamPay">FamPay</option>
+            <option value="Bank Transfer">Bank Transfer</option>
         </select>
 
-        <label>UPI ID</label>
-        <input name="upi">
-
-        <label>Description</label>
-        <textarea name="description" rows="4" required></textarea>
-
-        <button type="submit">Submit</button>
+        <input type="text" name="upi" placeholder="Your UPI ID" required>
+        <textarea name="description" placeholder="Describe your issue or order..." rows="4" required></textarea>
+        <button type="submit">Submit Ticket</button>
     </form>
 </body>
 </html>
