@@ -1,67 +1,66 @@
-from flask import Flask, render_template, request
-import discord
-from discord.ext import commands
-import os
-import threading
-import time
+from flask import Flask, render_template, request, redirect
+import os, requests, time
 from dotenv import load_dotenv
 
 load_dotenv()
 
-TOKEN = os.getenv("DISCORD_BOT_TOKEN")
-CHANNEL_ID = int(os.getenv("DISCORD_CHANNEL_ID"))
-
-intents = discord.Intents.default()
-intents.messages = True
-bot = commands.Bot(command_prefix="!", intents=intents)
-
 app = Flask(__name__)
-ip_submissions = {}
-
-BLOCK_SECONDS = 3 * 24 * 60 * 60  # 3 days
+WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
+COOLDOWN_SECONDS = 3 * 24 * 60 * 60  # 3 days
+ip_cooldowns = {}
 
 @app.route("/", methods=["GET", "POST"])
 def index():
-    ip = request.remote_addr
-    now = time.time()
-
-    if ip in ip_submissions and now - ip_submissions[ip] < BLOCK_SECONDS:
-        return "⛔ You have already submitted a ticket. Try again later."
+    user_ip = request.remote_addr
 
     if request.method == "POST":
-        name = request.form["name"]
-        email = request.form["email"]
-        mobile = request.form["mobile"]
-        payment = request.form["payment"]
-        website = request.form["website"]
+        now = time.time()
 
-        embed = discord.Embed(title="🎟️ New Ticket Submitted", color=0x3498db)
-        embed.add_field(name="👤 Name", value=name, inline=False)
-        embed.add_field(name="📧 Email", value=email, inline=False)
-        embed.add_field(name="📱 Mobile", value=mobile, inline=False)
-        embed.add_field(name="💳 Payment Method", value=payment, inline=False)
-        embed.add_field(name="🌐 Website", value=website, inline=False)
+        if user_ip in ip_cooldowns and now - ip_cooldowns[user_ip] < COOLDOWN_SECONDS:
+            return "❌ You already submitted. Try again after 3 days."
 
-        async def send():
-            await bot.wait_until_ready()
-            channel = bot.get_channel(CHANNEL_ID)
-            if channel:
-                await channel.send(embed=embed)
+        # Form fields
+        full_name = request.form.get("full_name")
+        email = request.form.get("email")
+        mobile = request.form.get("mobile")
+        product = request.form.get("product")
+        payment_method = request.form.get("payment_method")
+        upi = request.form.get("upi")
+        description = request.form.get("description")
 
-        bot.loop.create_task(send())
+        embed = {
+            "embeds": [
+                {
+                    "title": "📝 New Order / Ticket Submitted",
+                    "color": 0x2ecc71,
+                    "fields": [
+                        {"name": "👤 Full Name", "value": full_name, "inline": True},
+                        {"name": "📧 Email", "value": email, "inline": True},
+                        {"name": "📱 Mobile Number", "value": mobile, "inline": True},
+                        {"name": "📦 Product Name", "value": product, "inline": True},
+                        {"name": "💳 Payment Method", "value": payment_method, "inline": True},
+                        {"name": "📲 UPI ID", "value": upi or "N/A", "inline": True},
+                        {"name": "📝 Description", "value": description or "No description provided", "inline": False}
+                    ]
+                }
+            ]
+        }
 
-        ip_submissions[ip] = now
-        return "✅ Ticket submitted successfully!"
+        try:
+            response = requests.post(WEBHOOK_URL, json=embed)
+            response.raise_for_status()
+        except requests.exceptions.RequestException as e:
+            return f"❌ Error sending to Discord: {e}"
+
+        ip_cooldowns[user_ip] = now
+        return redirect("/success")
 
     return render_template("index.html")
 
-@bot.event
-async def on_ready():
-    print(f"✅ Discord bot logged in as {bot.user}")
-
-def run_flask():
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+@app.route("/success")
+def success():
+    return "✅ Submitted Successfully! We will contact you soon."
 
 if __name__ == "__main__":
-    threading.Thread(target=run_flask).start()
-    bot.run(TOKEN)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
