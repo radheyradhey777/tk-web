@@ -1,16 +1,12 @@
 services:
   - type: web
-    name: flask-discord-ticket-bot
+    name: flask-discord-ticket
     env: python
-    region: oregon  # or change to `singapore` or `frankfurt` if preferred
     plan: free
-    runtime: python
-    buildCommand: |
-      pip install -r requirements.txt
-    startCommand: gunicorn app:app --threads 4 --timeout 120 -b 0.0.0.0:$PORT
+    buildCommand: pip install -r requirements.txt
+    startCommand: python app.py
     envVars:
       - key: DISCORD_BOT_TOKEN
-        sync: false
+        value: your_bot_token
       - key: DISCORD_CHANNEL_ID
-        sync: false
-    autoDeploy: true
+        value: your_channel_id
