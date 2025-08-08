@@ -11,13 +11,17 @@ ip_cooldowns = {}
 
 @app.route("/", methods=["GET", "POST"])
 def index():
-    user_ip = request.remote_addr
+    user_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
+
+    # Do NOT block localhost (127.0.0.1 or ::1)
+    is_localhost = user_ip in ["127.0.0.1", "::1"]
 
     if request.method == "POST":
         now = time.time()
 
-        if user_ip in ip_cooldowns and now - ip_cooldowns[user_ip] < COOLDOWN_SECONDS:
-            return "❌ You already submitted. Try again after 3 days."
+        if not is_localhost and user_ip in ip_cooldowns:
+            if now - ip_cooldowns[user_ip] < COOLDOWN_SECONDS:
+                return "❌ You already submitted. Try again after 3 days."
 
         # Form fields
         full_name = request.form.get("full_name")
@@ -34,11 +38,11 @@ def index():
                     "title": "📝 New Order / Ticket Submitted",
                     "color": 0x2ecc71,
                     "fields": [
-                        {"name": "👤 Full Name", "value": full_name, "inline": True},
-                        {"name": "📧 Email", "value": email, "inline": True},
-                        {"name": "📱 Mobile Number", "value": mobile, "inline": True},
-                        {"name": "📦 Product Name", "value": product, "inline": True},
-                        {"name": "💳 Payment Method", "value": payment_method, "inline": True},
+                        {"name": "👤 Full Name", "value": full_name or "N/A", "inline": True},
+                        {"name": "📧 Email", "value": email or "N/A", "inline": True},
+                        {"name": "📱 Mobile Number", "value": mobile or "N/A", "inline": True},
+                        {"name": "📦 Product Name", "value": product or "N/A", "inline": True},
+                        {"name": "💳 Payment Method", "value": payment_method or "N/A", "inline": True},
                         {"name": "📲 UPI ID", "value": upi or "N/A", "inline": True},
                         {"name": "📝 Description", "value": description or "No description provided", "inline": False}
                     ]
@@ -52,7 +56,9 @@ def index():
         except requests.exceptions.RequestException as e:
             return f"❌ Error sending to Discord: {e}"
 
-        ip_cooldowns[user_ip] = now
+        if not is_localhost:
+            ip_cooldowns[user_ip] = now
+
         return redirect("/success")
 
     return render_template("index.html")
