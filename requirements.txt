@@ -1,10 +1,4 @@
-A minimal requirements file for a Flask web application.
-The core Flask framework.
 flask>=2.0.0
-For handling web forms securely (integrates WTForms with Flask).
 Flask-WTF>=1.0.0
-For loading environment variables from a .env file (for API keys, secrets, etc.).
 python-dotenv>=0.19.0
-A production-ready web server for deploying your Flask app.
-The built-in Flask server is only for development.
 gunicorn>=20.1.0
