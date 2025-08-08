@@ -1,10 +1,16 @@
 services:
   - type: web
-    name: ticket-system
+    name: flask-discord-ticket-bot
     env: python
+    region: oregon  # or change to `singapore` or `frankfurt` if preferred
     plan: free
-    buildCommand: ""
-    startCommand: python app.py
+    runtime: python
+    buildCommand: |
+      pip install -r requirements.txt
+    startCommand: gunicorn app:app --threads 4 --timeout 120 -b 0.0.0.0:$PORT
     envVars:
-      - key: DISCORD_WEBHOOK_URL
-        value: https://discord.com/api/webhooks/1401481441673740331/38Ij4PE0Ce0__gknAIgXSu7TOWfM34B-p5eU9v162CyIqyX6jR8YWH9NcmHSiK_kX-F_
+      - key: DISCORD_BOT_TOKEN
+        sync: false
+      - key: DISCORD_CHANNEL_ID
+        sync: false
+    autoDeploy: true
