@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Submit Ticket</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+        font-family: Arial, sans-serif;
+        background: #f1f3f5;
+        padding: 40px;
+    }
+    form {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        max-width: 500px;
+        margin: auto;
+    }
+    input, select {
+        width: 100%;
+        padding: 10px;
+        margin-top: 10px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+    }
+    button {
+        margin-top: 20px;
+        padding: 10px;
+        background: #3498db;
+        color: white;
+        border: none;
+        width: 100%;
+        border-radius: 6px;
+        cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <form method="post">
+    <h2>Submit Ticket</h2>
+    <input type="text" name="name" placeholder="Your Name" required />
+    <input type="email" name="email" placeholder="Email" required />
+    <input type="text" name="mobile" placeholder="Mobile Number" required />
+    <select name="payment" required>
+      <option value="" disabled selected>Payment Method</option>
+      <option value="UPI">UPI</option>
+      <option value="GPay">GPay</option>
+      <option value="Paytm">Paytm</option>
+      <option value="PhonePe">PhonePe</option>
+      <option value="Fampay">Fampay</option>
+    </select>
+    <input type="text" name="website" placeholder="Website or Service Name" required />
+    <button type="submit">Submit</button>
+  </form>
+</body>
+</html>
