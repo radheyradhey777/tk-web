@@ -10,14 +10,11 @@ load_dotenv()
 
 app = Flask(__name__)
 
-# Discord webhook URL from .env
 WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
-
-# Cooldown time in seconds (5 days)
-COOLDOWN_SECONDS = 5 * 24 * 60 * 60
+COOLDOWN_SECONDS = 5 * 24 * 60 * 60  # 5 days
 IP_LOG_FILE = "ip_log.json"
 
-# Load or initialize IP log
+# Load or create IP log
 if os.path.exists(IP_LOG_FILE):
     with open(IP_LOG_FILE, "r") as f:
         ip_log = json.load(f)
@@ -27,22 +24,22 @@ else:
 @app.route("/", methods=["GET", "POST"])
 def form():
     if request.method == "POST":
-        # Honeypot anti-spam field
+        # Honeypot field (anti-bot)
         if request.form.get("honeypot"):
             return "❌ Spam detected.", 400
 
-        # Get user's real IP
+        # Get user IP
         user_ip = request.headers.get('X-Forwarded-For', request.remote_addr).split(',')[0].strip()
         current_time = time.time()
 
-        # Cooldown check
+        # Check cooldown
         if user_ip in ip_log:
             time_diff = current_time - ip_log[user_ip]
             if time_diff < COOLDOWN_SECONDS:
                 remaining_days = int((COOLDOWN_SECONDS - time_diff) // 86400)
                 return f"❌ You can only submit one ticket every 5 days. Try again in {remaining_days} day(s).", 429
 
-        # Get form values
+        # Form fields
         name = request.form.get("name")
         email = request.form.get("email")
         contact_method = request.form.get("contact")
@@ -50,10 +47,10 @@ def form():
         product = request.form.get("product")
         payment = request.form.get("payment")
 
-        # Create Discord embed
+        # Build embed
         embed = {
             "title": "📩 New Ticket Submitted",
-            "color": 128,  # Navy Blue
+            "color": 128,  # Navy blue
             "fields": [
                 {"name": "👤 Name", "value": name or "N/A", "inline": True},
                 {"name": "📧 Email", "value": email or "N/A", "inline": True},
@@ -67,13 +64,19 @@ def form():
         }
 
         try:
-            # Send to Discord webhook
+            # Send to Discord with retry if rate-limited
             response = requests.post(WEBHOOK_URL, json={"embeds": [embed]})
+            if response.status_code == 429:
+                retry_after = response.json().get("retry_after", 1)
+                print(f"⚠️ Rate limited! Retrying after {retry_after} seconds...")
+                time.sleep(retry_after)
+                response = requests.post(WEBHOOK_URL, json={"embeds": [embed]})
             response.raise_for_status()
+
         except Exception as e:
             return f"❌ Error sending to Discord: {e}", 500
 
-        # Log IP submission time
+        # Save IP log
         ip_log[user_ip] = current_time
         with open(IP_LOG_FILE, "w") as f:
             json.dump(ip_log, f)
@@ -82,7 +85,7 @@ def form():
 
     return render_template("index.html")
 
-# Render deployment compatibility
+# Render-compatible run block
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
