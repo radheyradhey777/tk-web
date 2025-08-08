@@ -1,16 +1,72 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Submit Ticket</title>
+    <title>Submit Order / Ticket</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
+            padding: 20px;
+        }
+        form {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 600px;
+            margin: auto;
+        }
+        input, textarea, select {
+            width: 100%;
+            padding: 8px;
+            margin: 8px 0 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            background: #2ecc71;
+            border: none;
+            padding: 12px;
+            color: white;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        h2 {
+            text-align: center;
+        }
+    </style>
 </head>
 <body>
-    <h1>Ticket Form</h1>
     <form method="POST">
-        <input type="text" name="name" placeholder="Name" required><br>
-        <input type="email" name="email" placeholder="Email" required><br>
-        <input type="text" name="mobile" placeholder="Mobile" required><br>
-        <input type="text" name="payment" placeholder="Payment Method" required><br>
-        <input type="text" name="website" placeholder="Website" required><br>
+        <h2>📝 Submit Order / Ticket</h2>
+
+        <label>Your Full Name</label>
+        <input name="full_name" required>
+
+        <label>Email</label>
+        <input type="email" name="email" required>
+
+        <label>Mobile Number</label>
+        <input name="mobile" required>
+
+        <label>Product Name</label>
+        <input name="product" required>
+
+        <label>Payment Method</label>
+        <select name="payment_method" required>
+            <option value="UPI">UPI</option>
+            <option value="GPay">GPay</option>
+            <option value="Paytm">Paytm</option>
+            <option value="PhonePe">PhonePe</option>
+            <option value="FamPay">FamPay</option>
+        </select>
+
+        <label>UPI ID</label>
+        <input name="upi">
+
+        <label>Description</label>
+        <textarea name="description" rows="4" required></textarea>
+
         <button type="submit">Submit</button>
     </form>
 </body>
