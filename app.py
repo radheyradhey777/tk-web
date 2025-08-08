@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, request
 import discord
 from discord.ext import commands
 import os
@@ -12,20 +12,19 @@ TOKEN = os.getenv("DISCORD_BOT_TOKEN")
 CHANNEL_ID = int(os.getenv("DISCORD_CHANNEL_ID"))
 
 intents = discord.Intents.default()
+intents.messages = True
 bot = commands.Bot(command_prefix="!", intents=intents)
 
 app = Flask(__name__)
-ip_submissions = {}  # IP: timestamp
+ip_submissions = {}
 
-# BLOCK IP FOR 3 DAYS (259200 seconds)
-BLOCK_SECONDS = 3 * 24 * 60 * 60
+BLOCK_SECONDS = 3 * 24 * 60 * 60  # 3 days
 
 @app.route("/", methods=["GET", "POST"])
 def index():
     ip = request.remote_addr
     now = time.time()
 
-    # Check if IP is blocked
     if ip in ip_submissions and now - ip_submissions[ip] < BLOCK_SECONDS:
         return "⛔ You have already submitted a ticket. Try again later."
 
@@ -51,7 +50,6 @@ def index():
 
         bot.loop.create_task(send())
 
-        # Block IP
         ip_submissions[ip] = now
         return "✅ Ticket submitted successfully!"
 
