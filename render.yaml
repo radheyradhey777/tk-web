@@ -1,11 +1,6 @@
 services:
   - type: web
-    name: ticket-discord-app
-    runtime: python
+    name: webhook-form-ticket
+    env: python
     buildCommand: pip install -r requirements.txt
     startCommand: python app.py
-    envVars:
-      - key: DISCORD_BOT_TOKEN
-        sync: false
-      - key: DISCORD_CHANNEL_ID
-        sync: false
