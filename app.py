@@ -1,66 +1,99 @@
-from flask import Flask, request, render_template_string
-import json, time, os
+from flask import Flask, request, render_template
+import os
+import discord
+from discord.ext import commands
 from dotenv import load_dotenv
-from bot import queue_message
+import asyncio
+import time
 
-app = Flask(__name__)
 load_dotenv()
 
-COOLDOWN_SECONDS = 3 * 24 * 60 * 60  # 3 days
-IP_LOG_FILE = "ip_log.json"
+DISCORD_TOKEN = os.getenv("DISCORD_BOT_TOKEN")
+GUILD_ID = int(os.getenv("DISCORD_GUILD_ID", 0))
+CHANNEL_ID = int(os.getenv("DISCORD_CHANNEL_ID", 0))
 
-def get_ip():
-    if request.environ.get('HTTP_X_FORWARDED_FOR'):
-        return request.environ['HTTP_X_FORWARDED_FOR'].split(',')[0]
-    return request.remote_addr
+app = Flask(__name__)
 
-def is_spam(ip):
-    try:
-        with open(IP_LOG_FILE, 'r') as f:
-            ip_data = json.load(f)
-    except:
-        ip_data = {}
-    return time.time() - ip_data.get(ip, 0) < COOLDOWN_SECONDS
+intents = discord.Intents.default()
+intents.messages = True
+bot = commands.Bot(command_prefix="!", intents=intents)
+loop = asyncio.get_event_loop()
 
-def log_ip(ip):
-    try:
-        with open(IP_LOG_FILE, 'r') as f:
-            ip_data = json.load(f)
-    except:
-        ip_data = {}
-    ip_data[ip] = time.time()
-    with open(IP_LOG_FILE, 'w') as f:
-        json.dump(ip_data, f)
+# 🔒 IP blocking storage
+ip_submissions = {}
+ip_blocked = {}
+MAX_SUBMISSIONS = 3
+BLOCK_DURATION = 3 * 24 * 60 * 60  # 3 days in seconds
 
-@app.route("/", methods=["GET", "POST"])
+@bot.event
+async def on_ready():
+    print(f"[Bot] Logged in as {bot.user}")
+
+@app.route('/')
 def home():
-    if request.method == "POST":
-        ip = get_ip()
-        if is_spam(ip):
-            return "❌ You already submitted a ticket. Please wait 3 days."
+    return '''
+    <h2>Submit Ticket</h2>
+    <form method="POST" action="/submit">
+        Your Name: <input name="name"><br>
+        Email: <input name="email"><br>
+        Mobile Number: <input name="mobile"><br>
+        Payment Method:
+            <select name="payment">
+                <option>UPI</option>
+                <option>GPay</option>
+                <option>Paytm</option>
+                <option>PhonePe</option>
+                <option>Fampay</option>
+            </select><br>
+        Website/Service: <input name="website"><br>
+        <input type="submit" value="Submit">
+    </form>
+    '''
 
-        name = request.form.get("name")
-        email = request.form.get("email")
-        mobile = request.form.get("mobile")
-        payment = request.form.get("payment")
-        website = request.form.get("website") or "Not provided"
+@app.route('/submit', methods=['POST'])
+def submit():
+    ip = request.remote_addr
 
-        log_ip(ip)
+    # 🔒 Blocked IP check
+    if ip in ip_blocked and time.time() < ip_blocked[ip]:
+        return "⛔ Your IP is blocked for spamming. Try again later."
 
-        message = (
-            f"**👤 Name:** {name}\n"
-            f"📧 **Email:** {email}\n"
-            f"📱 **Mobile:** {mobile}\n"
-            f"💳 **Payment Method:** {payment}\n"
-            f"🌐 **Website:** {website}\n"
-            f"🌍 **IP:** {ip}"
-        )
+    # 🔒 Count submissions
+    ip_submissions[ip] = ip_submissions.get(ip, 0) + 1
+    if ip_submissions[ip] > MAX_SUBMISSIONS:
+        ip_blocked[ip] = time.time() + BLOCK_DURATION
+        return "🚫 You have been blocked for 3 days due to spamming."
 
-        queue_message(message)
-        return "✅ Ticket submitted successfully!"
+    # Form data
+    name = request.form['name']
+    email = request.form['email']
+    mobile = request.form['mobile']
+    payment = request.form['payment']
+    website = request.form['website']
 
-    return render_template_string(open("form.html").read())
+    message = f"""**🎫 New Ticket Submitted**
+> 👤 Name: {name}
+> 📧 Email: {email}
+> 📱 Mobile: {mobile}
+> 💸 Payment: {payment}
+> 🌐 Service: {website}
+"""
 
-if __name__ == "__main__":
-    import bot
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+    loop.create_task(send_discord_message(message))
+    return "✅ Ticket submitted successfully!"
+
+async def send_discord_message(msg):
+    await bot.wait_until_ready()
+    channel = bot.get_channel(CHANNEL_ID)
+    if channel:
+        await channel.send(msg)
+    else:
+        print("[Bot] Channel not found")
+
+def run_discord_bot():
+    loop.create_task(bot.start(DISCORD_TOKEN))
+
+run_discord_bot()
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5000)))
