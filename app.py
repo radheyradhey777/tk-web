@@ -9,9 +9,11 @@ from datetime import datetime
 # Load environment variables from a .env file
 load_dotenv()
 
-app = Flask(__name__, template_folder='.')
-# It's better to use the template_folder='.' if your HTML file is in the same directory.
-# Or create a 'templates' folder and put index.html inside it.
+# --- FLASK APP INITIALIZATION ---
+# By default, Flask looks for HTML files in a folder named 'templates'.
+# Make sure your index.html file is inside a 'templates' folder.
+app = Flask(__name__)
+
 
 # --- CONFIGURATION ---
 WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
@@ -125,13 +127,12 @@ def form():
         # Redirect to the same page with a success query parameter
         return redirect("/?success=true")
 
-    # For GET requests, just render the HTML form
-    # The HTML file should be named 'index.html' and be in the same directory or a 'templates' folder.
+    # For GET requests, render the HTML form from the 'templates' folder.
     return render_template("index.html")
 
 if __name__ == "__main__":
     # Use the PORT environment variable if available (common for hosting platforms)
     port = int(os.environ.get("PORT", 5000))
     # Running on 0.0.0.0 makes it accessible from other devices on the network
-    app.run(host="0.0.0.0", port=port, debug=True) # debug=True is helpful for development
+    app.run(host="0.0.0.0", port=port)
 
