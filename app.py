@@ -1,76 +1,66 @@
-import discord
-import asyncio
-import os
-import json
-import time
+from flask import Flask, request, render_template_string
+import json, time, os
 from dotenv import load_dotenv
+from bot import queue_message
 
+app = Flask(__name__)
 load_dotenv()
 
-TOKEN = os.getenv("DISCORD_BOT_TOKEN")
-CHANNEL_ID = int(os.getenv("DISCORD_CHANNEL_ID"))
-
-intents = discord.Intents.default()
-client = discord.Client(intents=intents)
-
-message_queue = asyncio.Queue()
-
-# IP cooldown logic
-COOLDOWN_SECONDS = 3 * 24 * 60 * 60  # 3 days in seconds
+COOLDOWN_SECONDS = 3 * 24 * 60 * 60  # 3 days
 IP_LOG_FILE = "ip_log.json"
 
-def load_ip_data():
+def get_ip():
+    if request.environ.get('HTTP_X_FORWARDED_FOR'):
+        return request.environ['HTTP_X_FORWARDED_FOR'].split(',')[0]
+    return request.remote_addr
+
+def is_spam(ip):
     try:
         with open(IP_LOG_FILE, 'r') as f:
-            return json.load(f)
+            ip_data = json.load(f)
     except:
-        return {}
-
-def save_ip_data(data):
-    with open(IP_LOG_FILE, 'w') as f:
-        json.dump(data, f)
-
-def is_ip_blocked(ip):
-    ip_data = load_ip_data()
-    last_time = ip_data.get(ip, 0)
-    return time.time() - last_time < COOLDOWN_SECONDS
+        ip_data = {}
+    return time.time() - ip_data.get(ip, 0) < COOLDOWN_SECONDS
 
 def log_ip(ip):
-    ip_data = load_ip_data()
+    try:
+        with open(IP_LOG_FILE, 'r') as f:
+            ip_data = json.load(f)
+    except:
+        ip_data = {}
     ip_data[ip] = time.time()
-    save_ip_data(ip_data)
+    with open(IP_LOG_FILE, 'w') as f:
+        json.dump(ip_data, f)
 
-# This function will be used by the Flask app
-def queue_message(content, ip=None):
-    if ip:
-        if is_ip_blocked(ip):
-            print(f"⛔ Blocked IP tried to send ticket: {ip}")
-            return False
+@app.route("/", methods=["GET", "POST"])
+def home():
+    if request.method == "POST":
+        ip = get_ip()
+        if is_spam(ip):
+            return "❌ You already submitted a ticket. Please wait 3 days."
+
+        name = request.form.get("name")
+        email = request.form.get("email")
+        mobile = request.form.get("mobile")
+        payment = request.form.get("payment")
+        website = request.form.get("website") or "Not provided"
+
         log_ip(ip)
-    asyncio.run_coroutine_threadsafe(message_queue.put(content), client.loop)
-    return True
 
-@client.event
-async def on_ready():
-    print(f"✅ Logged in as {client.user}")
-    channel = client.get_channel(CHANNEL_ID)
-    if not channel:
-        print("❌ Invalid channel ID")
-        return
+        message = (
+            f"**👤 Name:** {name}\n"
+            f"📧 **Email:** {email}\n"
+            f"📱 **Mobile:** {mobile}\n"
+            f"💳 **Payment Method:** {payment}\n"
+            f"🌐 **Website:** {website}\n"
+            f"🌍 **IP:** {ip}"
+        )
 
-    while True:
-        message = await message_queue.get()
-        try:
-            embed = discord.Embed(
-                title="📩 New Ticket Submitted",
-                description=message,
-                color=discord.Color.dark_blue()
-            )
-            await channel.send(embed=embed)
-            print("✅ Ticket sent to Discord")
-        except Exception as e:
-            print(f"❌ Error sending to Discord: {e}")
-        await asyncio.sleep(1)
+        queue_message(message)
+        return "✅ Ticket submitted successfully!"
 
-def run_bot():
-    client.run(TOKEN)
+    return render_template_string(open("form.html").read())
+
+if __name__ == "__main__":
+    import bot
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
