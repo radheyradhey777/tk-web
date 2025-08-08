@@ -2,65 +2,101 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Submit Ticket | CoRamTix</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submit Support Ticket</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
-            background: #f5f7fa;
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            padding-top: 40px;
+            background-color: #f8f9fa;
         }
-        form {
-            background: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            width: 100%;
-            max-width: 500px;
+        .container {
+            max-width: 700px;
         }
-        input, textarea, select {
-            width: 100%;
-            padding: 10px;
-            margin-top: 8px;
-            margin-bottom: 16px;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-        }
-        button {
-            background: #2ecc71;
-            color: white;
-            padding: 12px;
+        .card {
             border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            width: 100%;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
-        button:hover {
-            background: #27ae60;
+        /* This hides the honeypot field from users */
+        .honeypot-field {
+            display: none;
         }
     </style>
 </head>
 <body>
-    <form method="POST">
-        <h2>🎟️ Submit Your Ticket</h2>
-        <input type="text" name="full_name" placeholder="Your Full Name" required>
-        <input type="email" name="email" placeholder="Email Address" required>
-        <input type="text" name="mobile" placeholder="Mobile Number" required>
-        <input type="text" name="product" placeholder="Product Name" required>
-        
-        <select name="payment_method" required>
-            <option value="">Select Payment Method</option>
-            <option value="UPI">UPI</option>
-            <option value="Paytm">Paytm</option>
-            <option value="PhonePe">PhonePe</option>
-            <option value="Bank Transfer">Bank Transfer</option>
-        </select>
 
-        <input type="text" name="upi" placeholder="Your UPI ID" required>
-        <textarea name="description" placeholder="Describe your issue or order..." rows="4" required></textarea>
-        <button type="submit">Submit Ticket</button>
-    </form>
+    <div class="container my-5">
+        <div class="card p-4 p-md-5">
+            <h2 class="text-center mb-4">🎫 Submit a Support Ticket</h2>
+
+            <div id="success-alert" class="alert alert-success d-none" role="alert">
+                ✅ **Thank you!** Your ticket has been submitted successfully. We will get back to you soon.
+            </div>
+
+            <form action="/" method="POST">
+                <div class="honeypot-field">
+                    <label for="honeypot">Leave this field empty</label>
+                    <input type="text" name="honeypot" id="honeypot">
+                </div>
+                
+                <div class="mb-3">
+                    <label for="name" class="form-label">Full Name</label>
+                    <input type="text" class="form-control" id="name" name="name" required>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="email" class="form-label">Email Address</label>
+                        <input type="email" class="form-control" id="email" name="email" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="mobile" class="form-label">Mobile Number</label>
+                        <input type="tel" class="form-control" id="mobile" name="mobile" required>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="product" class="form-label">Product Name</label>
+                    <input type="text" class="form-control" id="product" name="product" required>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="payment" class="form-label">Payment Method</label>
+                        <select class="form-select" id="payment" name="payment" required>
+                            <option value="" selected disabled>Select a method...</option>
+                            <option value="Credit Card">Credit Card</option>
+                            <option value="Debit Card">Debit Card</option>
+                            <option value="UPI">UPI</option>
+                            <option value="Net Banking">Net Banking</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="upi" class="form-label">UPI ID (if applicable)</label>
+                        <input type="text" class="form-control" id="upi" name="upi">
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="description" class="form-label">Describe your issue</label>
+                    <textarea class="form-control" id="description" name="description" rows="4" required></textarea>
+                </div>
+
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary btn-lg">Submit Ticket</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('success') === '1') {
+                document.getElementById('success-alert').classList.remove('d-none');
+            }
+        });
+    </script>
+
 </body>
 </html>
