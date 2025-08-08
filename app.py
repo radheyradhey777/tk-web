@@ -1,83 +1,72 @@
 from flask import Flask, render_template, request, redirect
-import os, requests, time, json
+import os
+import requests
+import json
+import time
 from dotenv import load_dotenv
 
 load_dotenv()
 
 app = Flask(__name__)
 WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
-COOLDOWN_SECONDS = 3 * 24 * 60 * 60  # 3 days
-LOG_FILE = "ip_logs.json"
+COOLDOWN_SECONDS = 5 * 24 * 60 * 60
+IP_LOG_FILE = "ip_log.json"
 
-# Load or initialize IP cooldowns
-if os.path.exists(LOG_FILE):
-    try:
-        with open(LOG_FILE, "r") as f:
-            ip_cooldowns = json.load(f)
-    except json.JSONDecodeError:
-        ip_cooldowns = {}
+if os.path.exists(IP_LOG_FILE):
+    with open(IP_LOG_FILE, "r") as f:
+        ip_log = json.load(f)
 else:
-    ip_cooldowns = {}
+    ip_log = {}
 
 @app.route("/", methods=["GET", "POST"])
-def index():
-    user_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
-
+def form():
     if request.method == "POST":
-        now = time.time()
+        if request.form.get("honeypot"):
+            return "❌ Spam detected.", 400
 
-        # Check cooldown
-        if user_ip in ip_cooldowns and now - ip_cooldowns[user_ip] < COOLDOWN_SECONDS:
-            return "❌ You already submitted a ticket. Try again after 3 days."
+        user_ip = request.headers.get('X-Forwarded-For', request.remote_addr).split(',')[0].strip()
+        current_time = time.time()
 
-        # Form Data
-        full_name = request.form.get("full_name")
+        if user_ip in ip_log:
+            time_diff = current_time - ip_log[user_ip]
+            if time_diff < COOLDOWN_SECONDS:
+                remaining_days = int((COOLDOWN_SECONDS - time_diff) // 86400)
+                return f"❌ You can only submit one ticket every 5 days. Try again in {remaining_days} day(s).", 429
+
+        # 📝 Updated Fields
+        name = request.form.get("name")
         email = request.form.get("email")
         mobile = request.form.get("mobile")
         product = request.form.get("product")
-        payment_method = request.form.get("payment_method")
+        payment = request.form.get("payment")
         upi = request.form.get("upi")
         description = request.form.get("description")
 
-        # Create Embed Payload
-        embed = {
-            "embeds": [
-                {
-                    "title": "📝 New Order / Ticket Submitted",
-                    "color": 0x2ecc71,
-                    "fields": [
-                        {"name": "👤 Full Name", "value": full_name or "N/A", "inline": True},
-                        {"name": "📧 Email", "value": email or "N/A", "inline": True},
-                        {"name": "📱 Mobile Number", "value": mobile or "N/A", "inline": True},
-                        {"name": "📦 Product Name", "value": product or "N/A", "inline": True},
-                        {"name": "💳 Payment Method", "value": payment_method or "N/A", "inline": True},
-                        {"name": "📲 UPI ID", "value": upi or "N/A", "inline": True},
-                        {"name": "📝 Description", "value": description or "No description", "inline": False},
-                        {"name": "🌐 IP Address", "value": user_ip or "Unknown", "inline": False}
-                    ]
-                }
-            ]
-        }
+        content = (
+            f"📩 **New Ticket Submitted**\n\n"
+            f"👤 **Full Name:** {name}\n"
+            f"📧 **Email:** {email}\n"
+            f"📱 **Mobile Number:** {mobile}\n"
+            f"🛍️ **Product Name:** {product}\n"
+            f"💳 **Payment Method:** {payment}\n"
+            f"🏦 **UPI ID:** {upi}\n"
+            f"📝 **Description:** {description}\n"
+            f"🌐 **IP Address:** {user_ip}"
+        )
 
-        # Send to Discord
         try:
-            response = requests.post(WEBHOOK_URL, json=embed)
+            response = requests.post(WEBHOOK_URL, json={"content": content})
             response.raise_for_status()
-        except requests.exceptions.RequestException as e:
-            return f"❌ Error sending to Discord: {e}"
+        except Exception as e:
+            return f"❌ Error sending to Discord: {e}", 500
 
-        # Log IP + timestamp
-        ip_cooldowns[user_ip] = now
-        with open(LOG_FILE, "w") as f:
-            json.dump(ip_cooldowns, f)
+        ip_log[user_ip] = current_time
+        with open(IP_LOG_FILE, "w") as f:
+            json.dump(ip_log, f)
 
-        return redirect("/success")
+        return redirect("/?success=1")
 
     return render_template("index.html")
-
-@app.route("/success")
-def success():
-    return "✅ Submitted Successfully! We'll get back to you soon."
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
