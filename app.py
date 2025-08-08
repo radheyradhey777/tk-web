@@ -1,99 +1,77 @@
-from flask import Flask, request, render_template
-import os
+from flask import Flask, render_template, request, redirect, request, abort
 import discord
 from discord.ext import commands
+import os
 from dotenv import load_dotenv
-import asyncio
+import threading
 import time
+import json
 
 load_dotenv()
 
-DISCORD_TOKEN = os.getenv("DISCORD_BOT_TOKEN")
-GUILD_ID = int(os.getenv("DISCORD_GUILD_ID", 0))
-CHANNEL_ID = int(os.getenv("DISCORD_CHANNEL_ID", 0))
-
-app = Flask(__name__)
+TOKEN = os.getenv("DISCORD_BOT_TOKEN")
+CHANNEL_ID = int(os.getenv("DISCORD_CHANNEL_ID"))
+COOLDOWN_FILE = "cooldowns.json"
+COOLDOWN_SECONDS = 3 * 24 * 60 * 60  # 3 days
 
 intents = discord.Intents.default()
-intents.messages = True
 bot = commands.Bot(command_prefix="!", intents=intents)
-loop = asyncio.get_event_loop()
+app = Flask(__name__)
 
-# 🔒 IP blocking storage
-ip_submissions = {}
-ip_blocked = {}
-MAX_SUBMISSIONS = 3
-BLOCK_DURATION = 3 * 24 * 60 * 60  # 3 days in seconds
+# Load cooldown data
+if os.path.exists(COOLDOWN_FILE):
+    with open(COOLDOWN_FILE, "r") as f:
+        cooldowns = json.load(f)
+else:
+    cooldowns = {}
 
 @bot.event
 async def on_ready():
-    print(f"[Bot] Logged in as {bot.user}")
+    print(f"Bot connected as {bot.user}")
 
-@app.route('/')
-def home():
-    return '''
-    <h2>Submit Ticket</h2>
-    <form method="POST" action="/submit">
-        Your Name: <input name="name"><br>
-        Email: <input name="email"><br>
-        Mobile Number: <input name="mobile"><br>
-        Payment Method:
-            <select name="payment">
-                <option>UPI</option>
-                <option>GPay</option>
-                <option>Paytm</option>
-                <option>PhonePe</option>
-                <option>Fampay</option>
-            </select><br>
-        Website/Service: <input name="website"><br>
-        <input type="submit" value="Submit">
-    </form>
-    '''
-
-@app.route('/submit', methods=['POST'])
-def submit():
+@app.route("/", methods=["GET", "POST"])
+def index():
     ip = request.remote_addr
 
-    # 🔒 Blocked IP check
-    if ip in ip_blocked and time.time() < ip_blocked[ip]:
-        return "⛔ Your IP is blocked for spamming. Try again later."
+    now = time.time()
+    last_submission = cooldowns.get(ip, 0)
 
-    # 🔒 Count submissions
-    ip_submissions[ip] = ip_submissions.get(ip, 0) + 1
-    if ip_submissions[ip] > MAX_SUBMISSIONS:
-        ip_blocked[ip] = time.time() + BLOCK_DURATION
-        return "🚫 You have been blocked for 3 days due to spamming."
+    if now - last_submission < COOLDOWN_SECONDS:
+        return f"<h3>🚫 You already submitted a ticket from this IP. Try again after 3 days.</h3>"
 
-    # Form data
-    name = request.form['name']
-    email = request.form['email']
-    mobile = request.form['mobile']
-    payment = request.form['payment']
-    website = request.form['website']
+    if request.method == "POST":
+        name = request.form["name"]
+        email = request.form["email"]
+        mobile = request.form["mobile"]
+        payment = request.form["payment"]
+        website = request.form["website"]
 
-    message = f"""**🎫 New Ticket Submitted**
-> 👤 Name: {name}
-> 📧 Email: {email}
-> 📱 Mobile: {mobile}
-> 💸 Payment: {payment}
-> 🌐 Service: {website}
-"""
+        embed = discord.Embed(title="🎟️ New Ticket Submitted", color=0x3498db)
+        embed.add_field(name="👤 Name", value=name, inline=False)
+        embed.add_field(name="📧 Email", value=email, inline=False)
+        embed.add_field(name="📱 Mobile", value=mobile, inline=False)
+        embed.add_field(name="💳 Payment Method", value=payment, inline=False)
+        embed.add_field(name="🌐 Website", value=website, inline=False)
 
-    loop.create_task(send_discord_message(message))
-    return "✅ Ticket submitted successfully!"
+        async def send_embed():
+            channel = bot.get_channel(CHANNEL_ID)
+            if channel:
+                await channel.send(embed=embed)
 
-async def send_discord_message(msg):
-    await bot.wait_until_ready()
-    channel = bot.get_channel(CHANNEL_ID)
-    if channel:
-        await channel.send(msg)
-    else:
-        print("[Bot] Channel not found")
+        bot.loop.create_task(send_embed())
 
-def run_discord_bot():
-    loop.create_task(bot.start(DISCORD_TOKEN))
+        # Save the current submission time
+        cooldowns[ip] = now
+        with open(COOLDOWN_FILE, "w") as f:
+            json.dump(cooldowns, f)
 
-run_discord_bot()
+        return "<h3>✅ Ticket submitted successfully!</h3>"
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5000)))
+    return render_template("index.html")
+
+def run_flask():
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+
+if __name__ == "__main__":
+    threading.Thread(target=run_flask).start()
+    bot.run(TOKEN)
