@@ -33,94 +33,49 @@ def form():
         if user_ip in ip_log:
             time_diff = current_time - ip_log[user_ip]
             if time_diff < COOLDOWN_SECONDS:
-                remaining_days = int((COOLDOWN_SECONDS - time_diff) // 86400) + 1 # +1 to round up
+                remaining_days = int((COOLDOWN_SECONDS - time_diff) // 86400) + 1
                 return f"❌ You can only submit one ticket every 5 days. Try again in {remaining_days} day(s).", 429
 
         # --- Form Data Collection ---
         name = request.form.get("name")
         email = request.form.get("email")
         mobile = request.form.get("mobile")
-        product = request.form.get("product")
+        product = request.form.get("product") # Now accepts any custom text
         payment = request.form.get("payment")
         upi = request.form.get("upi")
         description = request.form.get("description")
 
-        # ⭐️⭐️⭐️ START OF MODIFIED SECTION ⭐️⭐️⭐️
-
-        # --- Product Validation ---
-        # Only allow submissions for "Enhance" or "Premium" products.
-        # This check is case-insensitive.
-        allowed_products = ["enhance", "premium"]
-        if not product or product.lower() not in allowed_products:
-            return "❌ Invalid product selected. Please choose either Enhance or Premium.", 400
-
         # --- Discord Embed Creation ---
-        # Create the embed object, a dictionary that follows Discord's API structure.
         embed = {
             "title": "📩 New Ticket Submitted",
             "description": f"A new support ticket has been received from **{name}**.",
-            "color": 3447003,  # A nice blue color in decimal format
+            "color": 5814783,  # A nice blue color (hex #58b6ff)
             "fields": [
-                {
-                    "name": "👤 Full Name",
-                    "value": name,
-                    "inline": True
-                },
-                {
-                    "name": "📧 Email",
-                    "value": f"||{email}||", # Use spoiler tags for privacy
-                    "inline": True
-                },
-                {
-                    "name": "📱 Mobile Number",
-                    "value": f"||{mobile}||", # Use spoiler tags for privacy
-                    "inline": True
-                },
-                {
-                    "name": "🛍️ Product Name",
-                    "value": product,
-                    "inline": False # Set to False to take the full width
-                },
-                {
-                    "name": "💳 Payment Method",
-                    "value": payment,
-                    "inline": True
-                },
-                {
-                    "name": "🏦 UPI ID",
-                    "value": f"||{upi}||" if upi else "N/A", # Handle empty UPI and use spoiler tags
-                    "inline": True
-                },
-                {
-                    "name": "📝 Description",
-                    "value": description,
-                    "inline": False
-                }
+                {"name": "👤 Full Name", "value": name, "inline": True},
+                {"name": "📧 Email", "value": f"||{email}||", "inline": True},
+                {"name": "📱 Mobile Number", "value": f"||{mobile}||", "inline": True},
+                {"name": "🛍️ Product Name", "value": product, "inline": False},
+                {"name": "💳 Payment Method", "value": payment, "inline": True},
+                {"name": "🏦 UPI ID", "value": f"||{upi}||" if upi else "N/A", "inline": True},
+                {"name": "📝 Description", "value": description, "inline": False}
             ],
-            "footer": {
-                "text": f"IP Address: {user_ip}"
-            },
-            "timestamp": datetime.utcnow().isoformat() # Adds a timestamp to the embed
+            "footer": {"text": f"IP Address: {user_ip}"},
+            "timestamp": datetime.utcnow().isoformat()
         }
 
-        # The main payload sent to Discord. It contains a list of embeds.
         payload = {
-            "username": "Support Bot", # You can customize the bot's name
-            "avatar_url": "https://i.imgur.com/fKL31aD.png", # You can customize the bot's avatar
-            "embeds": [embed] # The 'embeds' key must be a list of embed objects
+            "username": "Support Bot",
+            "avatar_url": "https://i.imgur.com/fKL31aD.png",
+            "embeds": [embed]
         }
 
         try:
-            # Send the request to the webhook URL with the JSON payload
             response = requests.post(WEBHOOK_URL, json=payload)
-            response.raise_for_status() # Raise an exception for bad status codes (4xx or 5xx)
+            response.raise_for_status()
         except Exception as e:
-            # Log the error for debugging instead of showing it to the user
             print(f"Error sending to Discord: {e}")
             return "❌ There was an error submitting your ticket. Please try again later.", 500
         
-        # ⭐️⭐️⭐️ END OF MODIFIED SECTION ⭐️⭐️⭐️
-
         # --- Log IP and Redirect ---
         ip_log[user_ip] = current_time
         with open(IP_LOG_FILE, "w") as f:
@@ -128,7 +83,6 @@ def form():
 
         return redirect("/?success=1")
 
-    # Render the form template for GET requests
     return render_template("index.html")
 
 if __name__ == "__main__":
