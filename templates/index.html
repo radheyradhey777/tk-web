@@ -1,218 +1,212 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>CoRamTix | Submit Ticket</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #2a00b7;
-            margin: 0;
-            padding: 0;
-            color: #fff;
-        }
+  <meta charset="UTF-8" />
+  <title>CoRamTix | Submit Ticket</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #2a00b7;
+      margin: 0;
+      padding: 0;
+      color: #fff;
+    }
 
-        .form-container {
-            max-width: 600px;
-            margin: 40px auto;
-            background: #1e0033;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4);
-        }
+    .form-container {
+      max-width: 600px;
+      margin: 40px auto;
+      background: #1e0033;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4);
+    }
 
-        h2 {
-            text-align: center;
-            color: #ffffff;
-            margin-bottom: 20px;
-        }
+    h2 {
+      text-align: center;
+      color: #ffffff;
+      margin-bottom: 20px;
+    }
 
-        form label {
-            display: block;
-            margin-top: 15px;
-            font-weight: bold;
-            color: #cccccc;
-        }
+    form label {
+      display: block;
+      margin-top: 15px;
+      font-weight: bold;
+      color: #cccccc;
+    }
 
-        form input,
-        form select {
-            width: 100%;
-            padding: 12px;
-            margin-top: 6px;
-            border: 1px solid #444;
-            border-radius: 8px;
-            background-color: #2d2d4d;
-            color: #fff;
-            box-sizing: border-box;
-        }
+    form input,
+    form select {
+      width: 100%;
+      padding: 12px;
+      margin-top: 6px;
+      border: 1px solid #444;
+      border-radius: 8px;
+      background-color: #2d2d4d;
+      color: #fff;
+      box-sizing: border-box;
+    }
 
-        form input::placeholder {
-            color: #bbb;
-        }
+    form input::placeholder {
+      color: #bbb;
+    }
 
-        select optgroup {
-            font-weight: bold;
-            color: #aaa;
-        }
+    select optgroup {
+      font-weight: bold;
+      color: #aaa;
+    }
 
-        select option {
-            color: #fff;
-            background-color: #2d2d4d;
-        }
+    select option {
+      color: #fff;
+      background-color: #2d2d4d;
+    }
 
-        .honeypot {
-            display: none;
-        }
+    .honeypot {
+      display: none;
+    }
 
-        .submit-btn {
-            background-color: #7b37ff;
-            color: #fff;
-            border: none;
-            padding: 14px;
-            margin-top: 20px;
-            border-radius: 8px;
-            cursor: pointer;
-            width: 100%;
-            font-size: 16px;
-            transition: background-color 0.3s ease;
-        }
+    .submit-btn {
+      background-color: #7b37ff;
+      color: #fff;
+      border: none;
+      padding: 14px;
+      margin-top: 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      width: 100%;
+      font-size: 16px;
+      transition: background-color 0.3s ease;
+    }
 
-        .submit-btn:hover {
-            background-color: #a368ff;
-        }
+    .submit-btn:hover {
+      background-color: #a368ff;
+    }
 
-        .success {
-            background-color: #1a382c;
-            border: 1px solid #4fff6b;
-            border-radius: 8px;
-            padding: 20px;
-            text-align: center;
-            margin-bottom: 25px;
-        }
+    .success {
+      background-color: #1a382c;
+      border: 1px solid #4fff6b;
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+      margin-bottom: 25px;
+    }
 
-        .success-heading {
-            color: #ffffff;
-            font-size: 1.2em;
-            font-weight: bold;
-            margin: 0 0 10px 0;
-        }
+    .success-heading {
+      color: #ffffff;
+      font-size: 1.2em;
+      font-weight: bold;
+      margin: 0 0 10px 0;
+    }
 
-        .success-details {
-            color: #cccccc;
-            font-size: 0.95em;
-            font-weight: normal;
-            margin: 0;
-            line-height: 1.5;
-        }
+    .success-details {
+      color: #cccccc;
+      font-size: 0.95em;
+      font-weight: normal;
+      margin: 0;
+      line-height: 1.5;
+    }
 
-        @media (max-width: 600px) {
-            .form-container {
-                margin: 20px;
-                padding: 20px;
-            }
-        }
-    </style>
+    @media (max-width: 600px) {
+      .form-container {
+        margin: 20px;
+        padding: 20px;
+      }
+    }
+  </style>
 </head>
 <body>
-    <div class="form-container">
-        <h2>🎟️ Submit a Ticket</h2>
+  <div class="form-container">
+    <h2>🎟️ Submit a Ticket</h2>
 
-        {% if request.args.get('success') %}
-            <div class="success">
-                <div class="success-heading">✅ Success! Your Ticket is Submitted.</div>
-                <p class="success-details">
-                    Our support team will review your request and contact you shortly. Please allow up to 24 hours for a response.
-                </p>
-            </div>
-        {% endif %}
+    {% if request.args.get('success') %}
+      <div class="success">
+        <div class="success-heading">✅ Success! Your Ticket is Submitted.</div>
+        <p class="success-details">
+          Our support team will review your request and contact you shortly. Please allow up to 24 hours for a response.
+        </p>
+      </div>
+    {% endif %}
 
-        <form method="POST">
-            <input type="text" name="honeypot" class="honeypot">
+    <form method="POST">
+      <input type="text" name="honeypot" class="honeypot" />
 
-            <label for="name">Your Name</label>
-            <input type="text" name="name" placeholder="Enter your name" required>
+      <label for="name">Your Name</label>
+      <input type="text" name="name" placeholder="Enter your name" required />
 
-            <label for="email">Email Address</label>
-            <input type="email" name="email" placeholder="Enter your email" required>
+      <label for="email">Email Address</label>
+      <input type="email" name="email" placeholder="Enter your email" required />
 
-            <label for="contact">Preferred Contact Method</label>
-            <select name="contact" id="contact-method" required>
-                <optgroup label="Discord">
-                    <option value="Discord Username">Discord Username</option>
-                </optgroup>
-                <optgroup label="WhatsApp">
-                    <option value="WhatsApp Number">WhatsApp Number</option>
-                </optgroup>
-                <optgroup label="Mobile">
-                    <option value="Mobile Number">Mobile Number</option>
-                </optgroup>
-            </select>
+      <label for="contact">Preferred Contact Method</label>
+      <select name="contact" id="contact-method" required>
+        <optgroup label="Discord">
+          <option value="Discord Username">Discord Username</option>
+        </optgroup>
+        <optgroup label="WhatsApp">
+          <option value="WhatsApp Number">WhatsApp Number</option>
+        </optgroup>
+        <optgroup label="Mobile">
+          <option value="Mobile Number">Mobile Number</option>
+        </optgroup>
+      </select>
 
-            <label for="contact_value" id="contact-label">Your ID / Number</label>
-            <input type="text" name="contact_value" id="contact-input" placeholder="Enter Discord username, WhatsApp number, or mobile" required>
+      <label for="contact_value" id="contact-label">Your ID / Number</label>
+      <input type="text" name="contact_value" id="contact-input" placeholder="Enter your contact ID" required />
 
-            <label for="product">Product Name</label>
-            <input type="text" name="product" placeholder="e.g. Bot Hosting Basic Plan" required>
+      <label for="product">Product Name</label>
+      <input type="text" name="product" placeholder="e.g. Bot Hosting Basic Plan" required />
 
-            <label for="payment">Payment Method</label>
-            <select name="payment" required>
-                <option value="UPI (Fampay, GPay, etc)">UPI (Fampay, GPay, etc)</option>
-                <option value="Crypto USDT LTC">Crypto (Popular Coins)</option>
-            </select>
+      <label for="payment">Payment Method</label>
+      <select name="payment" required>
+        <option value="UPI (Fampay, GPay, etc)">UPI (Fampay, GPay, etc)</option>
+        <option value="Crypto USDT LTC">Crypto (Popular Coins)</option>
+      </select>
 
-            <button type="submit" class="submit-btn">Submit Ticket</button>
-        </form>
+      <button type="submit" class="submit-btn">Submit Ticket</button>
+    </form>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-gray-800 text-white mt-10">
+    <div class="container mx-auto px-6 py-12">
+      <nav class="flex justify-center flex-wrap gap-x-6 gap-y-2 mb-8">
+        <a href="https://coramtix.in/terms-of-service" class="text-gray-400 hover:text-white">Terms of Service</a>
+        <a href="https://coramtix.in/privacy-policy" class="text-gray-400 hover:text-white">Privacy Policy</a>
+        <a href="https://coramtix.in/refund-policy" class="text-gray-400 hover:text-white">Refund Policy</a>
+      </nav>
+      <div class="text-center text-gray-500 border-t border-gray-700 pt-8">
+        <p>&copy; <span id="copyright-year"></span> CoRamTix — Premium Server Hosting</p>
+      </div>
     </div>
+  </footer>
 
-    <footer class="bg-gray-800 text-white">
-        <div class="container mx-auto px-6 py-12">
-          <nav class="flex justify-center flex-wrap gap-x-6 gap-y-2 mb-8">
-            <a href="https://coramtix.in/terms-of-service" class="text-gray-400 hover:text-white">Terms of service</a>
-            <a href="https://coramtix.in/privacy-policy" class="text-gray-400 hover:text-white">Privacy policy</a>
-            <a href="https://coramtix.in/refund-policy" class="text-gray-400 hover:text-white">Refund policy</a>
-          </nav>
-          <div class="text-center text-gray-500 border-t border-gray-700 pt-8">
-            <p>&copy; <span id="copyright-year"></span> CoRamTix — Premium Server Hosting</p>
-          </div>
-        </div>
-    </footer>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const updateContactField = () => {
+        const select = document.getElementById("contact-method");
+        const selected = select.value;
+        const label = document.getElementById("contact-label");
+        const input = document.getElementById("contact-input");
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            function updateContactField() {
-                const select = document.getElementById("contact-method");
-                const selected = select.options[select.selectedIndex].value;
+        if (selected === "Discord Username") {
+          label.textContent = "Discord Username";
+          input.placeholder = "Enter your Discord Username";
+        } else if (selected === "WhatsApp Number") {
+          label.textContent = "WhatsApp Number";
+          input.placeholder = "Enter your WhatsApp Number";
+        } else if (selected === "Mobile Number") {
+          label.textContent = "Mobile Number";
+          input.placeholder = "Enter your Mobile Number";
+        } else {
+          label.textContent = "Your ID / Number";
+          input.placeholder = "Enter your contact detail";
+        }
+      };
 
-                const label = document.getElementById("contact-label");
-                const input = document.getElementById("contact-input");
-
-                if (selected === "Discord Username") {
-                    label.textContent = "Discord Username";
-                    input.placeholder = "Enter your Discord Username";
-                } else if (selected === "WhatsApp Number") {
-                    label.textContent = "WhatsApp Number";
-                    input.placeholder = "Enter your WhatsApp Number";
-                } else if (selected === "Mobile Number") {
-                    label.textContent = "Mobile Number";
-                    input.placeholder = "Enter your Mobile Number";
-                } else {
-                    label.textContent = "Your ID / Number";
-                    input.placeholder = "Enter your contact detail";
-                }
-            }
-            
-            // Initial call
-            updateContactField();
-
-            // Add event listener for changes
-            document.getElementById('contact-method').addEventListener('change', updateContactField);
-
-            // Set copyright year
-            document.getElementById('copyright-year').textContent = new Date().getFullYear();
-        });
-    </script>
+      updateContactField();
+      document.getElementById("contact-method").addEventListener("change", updateContactField);
+      document.getElementById("copyright-year").textContent = new Date().getFullYear();
+    });
+  </script>
 </body>
-    </html>
-                
+</html>
