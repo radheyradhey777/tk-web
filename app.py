@@ -9,13 +9,13 @@ WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
 COOLDOWN_SECONDS = 3 * 24 * 60 * 60  # 3 days
 LOG_FILE = "ip_logs.json"
 
-# Load previous IPs if file exists
+# Load or initialize IP cooldowns
 if os.path.exists(LOG_FILE):
-    with open(LOG_FILE, "r") as f:
-        try:
+    try:
+        with open(LOG_FILE, "r") as f:
             ip_cooldowns = json.load(f)
-        except json.JSONDecodeError:
-            ip_cooldowns = {}
+    except json.JSONDecodeError:
+        ip_cooldowns = {}
 else:
     ip_cooldowns = {}
 
@@ -26,11 +26,11 @@ def index():
     if request.method == "POST":
         now = time.time()
 
-        # Check if IP submitted within cooldown
+        # Check cooldown
         if user_ip in ip_cooldowns and now - ip_cooldowns[user_ip] < COOLDOWN_SECONDS:
-            return "❌ You already submitted. Try again after 3 days."
+            return "❌ You already submitted a ticket. Try again after 3 days."
 
-        # Form fields
+        # Form Data
         full_name = request.form.get("full_name")
         email = request.form.get("email")
         mobile = request.form.get("mobile")
@@ -39,6 +39,7 @@ def index():
         upi = request.form.get("upi")
         description = request.form.get("description")
 
+        # Create Embed Payload
         embed = {
             "embeds": [
                 {
@@ -58,13 +59,14 @@ def index():
             ]
         }
 
+        # Send to Discord
         try:
             response = requests.post(WEBHOOK_URL, json=embed)
             response.raise_for_status()
         except requests.exceptions.RequestException as e:
             return f"❌ Error sending to Discord: {e}"
 
-        # Save IP cooldown
+        # Log IP + timestamp
         ip_cooldowns[user_ip] = now
         with open(LOG_FILE, "w") as f:
             json.dump(ip_cooldowns, f)
@@ -75,7 +77,7 @@ def index():
 
 @app.route("/success")
 def success():
-    return "✅ Submitted Successfully! We will contact you soon."
+    return "✅ Submitted Successfully! We'll get back to you soon."
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
