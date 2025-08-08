@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect
-import os, requests, time
+import os, requests, time, json
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -7,15 +7,26 @@ load_dotenv()
 app = Flask(__name__)
 WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
 COOLDOWN_SECONDS = 3 * 24 * 60 * 60  # 3 days
-ip_cooldowns = {}
+LOG_FILE = "ip_logs.json"
+
+# Load previous IPs if file exists
+if os.path.exists(LOG_FILE):
+    with open(LOG_FILE, "r") as f:
+        try:
+            ip_cooldowns = json.load(f)
+        except json.JSONDecodeError:
+            ip_cooldowns = {}
+else:
+    ip_cooldowns = {}
 
 @app.route("/", methods=["GET", "POST"])
 def index():
-    user_ip = request.remote_addr
+    user_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
 
     if request.method == "POST":
         now = time.time()
 
+        # Check if IP submitted within cooldown
         if user_ip in ip_cooldowns and now - ip_cooldowns[user_ip] < COOLDOWN_SECONDS:
             return "❌ You already submitted. Try again after 3 days."
 
@@ -34,13 +45,14 @@ def index():
                     "title": "📝 New Order / Ticket Submitted",
                     "color": 0x2ecc71,
                     "fields": [
-                        {"name": "👤 Full Name", "value": full_name, "inline": True},
-                        {"name": "📧 Email", "value": email, "inline": True},
-                        {"name": "📱 Mobile Number", "value": mobile, "inline": True},
-                        {"name": "📦 Product Name", "value": product, "inline": True},
-                        {"name": "💳 Payment Method", "value": payment_method, "inline": True},
+                        {"name": "👤 Full Name", "value": full_name or "N/A", "inline": True},
+                        {"name": "📧 Email", "value": email or "N/A", "inline": True},
+                        {"name": "📱 Mobile Number", "value": mobile or "N/A", "inline": True},
+                        {"name": "📦 Product Name", "value": product or "N/A", "inline": True},
+                        {"name": "💳 Payment Method", "value": payment_method or "N/A", "inline": True},
                         {"name": "📲 UPI ID", "value": upi or "N/A", "inline": True},
-                        {"name": "📝 Description", "value": description or "No description provided", "inline": False}
+                        {"name": "📝 Description", "value": description or "No description", "inline": False},
+                        {"name": "🌐 IP Address", "value": user_ip or "Unknown", "inline": False}
                     ]
                 }
             ]
@@ -52,7 +64,11 @@ def index():
         except requests.exceptions.RequestException as e:
             return f"❌ Error sending to Discord: {e}"
 
+        # Save IP cooldown
         ip_cooldowns[user_ip] = now
+        with open(LOG_FILE, "w") as f:
+            json.dump(ip_cooldowns, f)
+
         return redirect("/success")
 
     return render_template("index.html")
