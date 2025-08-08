@@ -3,100 +3,124 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Submit Support Ticket</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Support Ticket</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body {
-            background-color: #f8f9fa;
-        }
-        .container {
-            max-width: 700px;
-        }
-        .card {
-            border: none;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-        /* This hides the honeypot field from users */
+        /* ⭐️ This is our honeypot field. It should be invisible to users. */
         .honeypot-field {
             display: none;
         }
     </style>
 </head>
-<body>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+    <div class="w-full max-w-2xl p-8 space-y-6 bg-white rounded-lg shadow-md">
+        <h1 class="text-2xl font-bold text-center text-gray-800">Submit a Support Ticket</h1>
 
-    <div class="container my-5">
-        <div class="card p-4 p-md-5">
-            <h2 class="text-center mb-4">🎫 Submit a Support Ticket</h2>
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="p-4 rounded-md {{ 'bg-green-100 text-green-700' if category == 'success' else 'bg-red-100 text-red-700' }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <!-- Do not show the form if the user is on cooldown -->
+        {% if not cooldown %}
+        <form method="POST" action="/" id="support-form" novalidate>
+            <!-- ⭐️ This is CRITICAL. It adds the CSRF token and other hidden fields. -->
+            {{ form.hidden_tag() }}
 
-            <div id="success-alert" class="alert alert-success d-none" role="alert">
-                ✅ **Thank you!** Your ticket has been submitted successfully. We will get back to you soon.
+            <!-- ⭐️ This is our time-based honeypot field. We populate it with JS. -->
+            <input type="hidden" name="submit_time" id="submit_time_field">
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Name Field -->
+                <div>
+                    <label for="name" class="block text-sm font-medium text-gray-700">{{ form.name.label }}</label>
+                    {{ form.name(class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500", placeholder="John Doe") }}
+                    {% for error in form.name.errors %}
+                        <span class="text-red-500 text-xs">{{ error }}</span>
+                    {% endfor %}
+                </div>
+
+                <!-- Email Field -->
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700">{{ form.email.label }}</label>
+                    {{ form.email(class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500", placeholder="you@example.com") }}
+                    {% for error in form.email.errors %}
+                        <span class="text-red-500 text-xs">{{ error }}</span>
+                    {% endfor %}
+                </div>
+
+                <!-- Mobile Field -->
+                <div>
+                    <label for="mobile" class="block text-sm font-medium text-gray-700">{{ form.mobile.label }}</label>
+                    {{ form.mobile(class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500", placeholder="123-456-7890") }}
+                    {% for error in form.mobile.errors %}
+                        <span class="text-red-500 text-xs">{{ error }}</span>
+                    {% endfor %}
+                </div>
+
+                <!-- Product Field -->
+                <div>
+                    <label for="product" class="block text-sm font-medium text-gray-700">{{ form.product.label }}</label>
+                    {{ form.product(class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500", placeholder="e.g., Premium Widget") }}
+                    {% for error in form.product.errors %}
+                        <span class="text-red-500 text-xs">{{ error }}</span>
+                    {% endfor %}
+                </div>
+
+                <!-- Payment Method Field -->
+                <div>
+                    <label for="payment" class="block text-sm font-medium text-gray-700">{{ form.payment.label }}</label>
+                    {{ form.payment(class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500") }}
+                    {% for error in form.payment.errors %}
+                        <span class="text-red-500 text-xs">{{ error }}</span>
+                    {% endfor %}
+                </div>
+
+                <!-- UPI ID Field -->
+                <div>
+                    <label for="upi" class="block text-sm font-medium text-gray-700">{{ form.upi.label }} (Optional)</label>
+                    {{ form.upi(class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500", placeholder="your-id@bank") }}
+                    {% for error in form.upi.errors %}
+                        <span class="text-red-500 text-xs">{{ error }}</span>
+                    {% endfor %}
+                </div>
             </div>
 
-            <form action="/" method="POST">
-                <div class="honeypot-field">
-                    <label for="honeypot">Leave this field empty</label>
-                    <input type="text" name="honeypot" id="honeypot">
-                </div>
-                
-                <div class="mb-3">
-                    <label for="name" class="form-label">Full Name</label>
-                    <input type="text" class="form-control" id="name" name="name" required>
-                </div>
+            <!-- Description Field -->
+            <div class="col-span-1 md:col-span-2">
+                <label for="description" class="block text-sm font-medium text-gray-700">{{ form.description.label }}</label>
+                {{ form.description(class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500", rows="4", placeholder="Please describe your issue in detail.") }}
+                {% for error in form.description.errors %}
+                    <span class="text-red-500 text-xs">{{ error }}</span>
+                {% endfor %}
+            </div>
 
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label for="email" class="form-label">Email Address</label>
-                        <input type="email" class="form-control" id="email" name="email" required>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label for="mobile" class="form-label">Mobile Number</label>
-                        <input type="tel" class="form-control" id="mobile" name="mobile" required>
-                    </div>
-                </div>
+            <!-- ⭐️ Honeypot Field -->
+            <div class="honeypot-field">
+                <label for="honeypot">Leave this field empty</label>
+                {{ form.honeypot() }}
+            </div>
 
-                <div class="mb-3">
-                    <label for="product" class="form-label">Product Name</label>
-                    <input type="text" class="form-control" id="product" name="product" required>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label for="payment" class="form-label">Payment Method</label>
-                        <select class="form-select" id="payment" name="payment" required>
-                            <option value="" selected disabled>Select a method...</option>
-                            <option value="Credit Card">Credit Card</option>
-                            <option value="Debit Card">Debit Card</option>
-                            <option value="UPI">UPI</option>
-                            <option value="Net Banking">Net Banking</option>
-                            <option value="Other">Other</option>
-                        </select>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label for="upi" class="form-label">UPI ID (if applicable)</label>
-                        <input type="text" class="form-control" id="upi" name="upi">
-                    </div>
-                </div>
-
-                <div class="mb-3">
-                    <label for="description" class="form-label">Describe your issue</label>
-                    <textarea class="form-control" id="description" name="description" rows="4" required></textarea>
-                </div>
-
-                <div class="d-grid">
-                    <button type="submit" class="btn btn-primary btn-lg">Submit Ticket</button>
-                </div>
-            </form>
-        </div>
+            <!-- Submit Button -->
+            <div>
+                <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    Submit Ticket
+                </button>
+            </div>
+        </form>
+        {% endif %}
     </div>
 
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('success') === '1') {
-                document.getElementById('success-alert').classList.remove('d-none');
-            }
-        });
+        // Set the timestamp on page load for the time-based honeypot.
+        document.getElementById('submit_time_field').value = Date.now() / 1000;
     </script>
-
 </body>
 </html>
+
