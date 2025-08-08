@@ -94,30 +94,71 @@
             </div>
         </form>
     </div>
+</div>
 
-    <div id="success-message" class="hidden mt-6 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg text-center">
-        ✅ Your Ticket has been created successfully. Please wait for the CoRamTix Team to reply within 24 hours.
+<div id="success-message" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-2xl shadow-xl p-8 max-w-sm w-full text-center transform transition-all scale-95 opacity-0" id="modal-dialog">
+        <div class="text-6xl text-green-500 mb-4">
+            <span>✅</span>
+        </div>
+        <h3 class="text-xl font-bold text-gray-900">Ticket Created!</h3>
+        <p class="text-gray-600 mt-2">
+            Your ticket has been submitted. Please wait for the CoRamTix Team to reply within 24 hours.
+        </p>
+        <button id="close-modal-btn" class="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 rounded-lg transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-blue-600/50">
+            OK
+        </button>
     </div>
 </div>
+
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const urlParams = new URLSearchParams(window.location.search);
-    const successMessage = document.getElementById('success-message');
-    const form = document.querySelector('form');
+    const successModal = document.getElementById('success-message');
+    const modalDialog = document.getElementById('modal-dialog');
+    const closeModalBtn = document.getElementById('close-modal-btn');
+    let modalTimeout;
 
+    // Function to hide the modal
+    function hideModal() {
+        // Add fade-out animation classes
+        modalDialog.classList.add('scale-95', 'opacity-0');
+        successModal.classList.add('opacity-0');
+        
+        // Wait for animation to finish before hiding
+        setTimeout(() => {
+            successModal.classList.add('hidden');
+            // Reset styles for next time
+            successModal.classList.remove('opacity-0');
+            modalDialog.classList.remove('scale-100', 'opacity-100');
+        }, 300); // Must match transition duration
+
+        window.history.replaceState(null, null, window.location.pathname);
+        clearTimeout(modalTimeout);
+    }
+
+    // Function to show the modal
+    function showModal() {
+        successModal.classList.remove('hidden');
+        // Use a short timeout to allow the browser to apply the 'hidden' removal first
+        // This ensures the transition animation works correctly.
+        setTimeout(() => {
+            successModal.classList.remove('opacity-0');
+            modalDialog.classList.add('scale-100', 'opacity-100');
+            modalDialog.classList.remove('scale-95', 'opacity-0');
+        }, 10);
+    }
+    
     // Check if the 'success' parameter is in the URL
     if (urlParams.has('success')) {
-        successMessage.classList.remove('hidden');
+        showModal();
         
-        // Optional: Hide the form and show a thank you message
-        // form.classList.add('hidden');
+        // Add event listener to the close button
+        closeModalBtn.addEventListener('click', hideModal);
         
-        // Hide the message after 5 seconds and clean up the URL
-        setTimeout(() => {
-            successMessage.classList.add('hidden');
-            window.history.replaceState(null, null, window.location.pathname);
-        }, 5000); // Message will be hidden after 5 seconds
+        // Hide the modal automatically after 7 seconds
+        modalTimeout = setTimeout(hideModal, 7000);
     }
 });
 </script>
