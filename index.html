@@ -3,327 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ticket System</title>
-    <!-- Tailwind CSS CDN for styling -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6;
-        }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 1rem;
-        }
-        .btn {
-            @apply px-4 py-2 font-semibold text-white rounded-lg shadow-md transition-transform transform hover:scale-105 active:scale-95;
-        }
-    </style>
+    <title>Support Ticket System</title>
+    <link rel="stylesheet" href="style.css">
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+<body>
 
-    <div id="app-container" class="w-full max-w-2xl bg-white rounded-xl shadow-2xl p-6 md:p-10 border border-gray-200">
-        <!-- Loading indicator -->
-        <div id="loading" class="text-center py-10 hidden">
-            <svg class="animate-spin h-8 w-8 text-blue-500 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            <p class="mt-2 text-gray-600">Loading...</p>
-        </div>
-
-        <!-- Login/Register View -->
-        <div id="auth-view" class="space-y-6">
-            <h1 class="text-3xl font-bold text-center text-gray-800">Welcome</h1>
-            <div class="flex justify-center space-x-4 mb-6">
-                <button id="show-login" class="btn bg-blue-600 hover:bg-blue-700">Login</button>
-                <button id="show-register" class="btn bg-blue-600 hover:bg-blue-700">Register</button>
-            </div>
-
-            <form id="auth-form" class="space-y-4">
-                <input id="auth-email" type="email" placeholder="Email" class="w-full p-3 rounded-lg border border-gray-300 focus:ring focus:ring-blue-200 focus:outline-none" required>
-                <input id="auth-password" type="password" placeholder="Password" class="w-full p-3 rounded-lg border border-gray-300 focus:ring focus:ring-blue-200 focus:outline-none" required>
-                <button id="auth-submit" type="submit" class="w-full btn bg-blue-600 hover:bg-blue-700">Login</button>
+    <div class="container">
+        <h1>Online Support Tickets</h1>
+        
+        <div id="user-section">
+            <h2>User: Submit a New Ticket</h2>
+            <form id="ticket-form">
+                <input type="text" id="subject" placeholder="Ticket Subject" required>
+                <textarea id="message" placeholder="Your message..." required></textarea>
+                <button type="submit">Submit Ticket</button>
             </form>
-            <p id="auth-message" class="text-center text-red-500"></p>
         </div>
+        
+        <hr>
 
-        <!-- Main App View -->
-        <div id="main-app-view" class="hidden">
-            <div class="flex justify-between items-center mb-6">
-                <h1 id="app-title" class="text-3xl font-bold text-gray-800"></h1>
-                <button id="logout-btn" class="btn bg-red-600 hover:bg-red-700">Logout</button>
+        <div id="admin-section">
+            <h2>Admin: Ticket Management</h2>
+            <div id="token-login">
+                <p>Admin, please enter your GitHub Personal Access Token:</p>
+                <input type="password" id="admin-token" placeholder="Enter Token">
+                <button onclick="loginAdmin()">Login</button>
             </div>
-            <p id="user-id-display" class="text-sm text-gray-500 mb-4"></p>
-
-            <!-- Ticket Creation Form -->
-            <div id="create-ticket-section" class="bg-gray-50 p-6 rounded-lg shadow-inner mb-8">
-                <h2 class="text-xl font-semibold mb-4 text-gray-700">Create a New Ticket</h2>
-                <textarea id="ticket-text" placeholder="Write your message here..." class="w-full p-3 rounded-lg border border-gray-300 focus:ring focus:ring-blue-200 focus:outline-none" rows="4"></textarea>
-                <button id="create-ticket-btn" class="mt-4 w-full btn bg-green-600 hover:bg-green-700">Submit Ticket</button>
-                <p id="ticket-message" class="mt-2 text-red-500"></p>
-            </div>
-
-            <!-- Tickets List -->
-            <div id="tickets-list-section">
-                <h2 class="text-xl font-semibold mb-4 text-gray-700">Tickets</h2>
-                <div id="tickets-list" class="space-y-4">
-                    <!-- Tickets will be dynamically added here -->
-                    <p id="no-tickets" class="text-center text-gray-500">No tickets found.</p>
-                </div>
+            <div id="ticket-list" style="display:none;">
+                <h3>All Tickets</h3>
+                <ul id="tickets-container">
+                    </ul>
             </div>
         </div>
     </div>
 
-    <!-- Firebase CDN -->
-    <script type="module">
-        // Import the functions you need from the SDKs you need
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, signInWithCustomToken, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc, addDoc, onSnapshot, collection, query, where, orderBy, deleteDoc } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
-
-        // Your web app's Firebase configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyAGXN6dWthp8Z4aYP7JvW38O32aG8KRGR4",
-            authDomain: "ticket-web-9fa9e.firebaseapp.com",
-            projectId: "ticket-web-9fa9e",
-            storageBucket: "ticket-web-9fa9e.firebasestorage.app",
-            messagingSenderId: "801985358951",
-            appId: "1:801985358951:web:29e558c044ecaaa5c8f8c2"
-        };
-        
-        // Global variables for Firebase services.
-        let app, auth, db;
-        // Global variable for the current user's role.
-        let userRole = 'user';
-        // The __app_id is a global variable provided by the Canvas environment.
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        
-        // This is the core logic, which can be saved as a separate file, e.g., 'coding.js'
-        
-        async function setupFirebaseAndAuth() {
-            try {
-                // Initialize Firebase services
-                app = initializeApp(firebaseConfig);
-                auth = getAuth(app);
-                db = getFirestore(app);
-
-                // Check for initial auth state and sign in if needed
-                if (typeof __initial_auth_token !== 'undefined') {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-
-                // Listen for authentication state changes
-                onAuthStateChanged(auth, async (user) => {
-                    if (user) {
-                        // User is signed in. Check their role.
-                        const userId = user.uid;
-                        // Display the user ID for collaborative purposes
-                        document.getElementById('user-id-display').textContent = `User ID: ${userId}`;
-                        
-                        await checkUserRole(userId);
-                        showMainApp();
-                        await fetchTickets();
-                    } else {
-                        // User is signed out.
-                        showAuthView();
-                    }
-                });
-            } catch (error) {
-                console.error("Firebase setup failed:", error);
-                showAuthView();
-            } finally {
-                document.getElementById('loading').classList.add('hidden');
-            }
-        }
-
-        // --- UI Control Functions ---
-        function showLoading() {
-            document.getElementById('loading').classList.remove('hidden');
-            document.getElementById('auth-view').classList.add('hidden');
-            document.getElementById('main-app-view').classList.add('hidden');
-        }
-
-        function showAuthView() {
-            document.getElementById('loading').classList.add('hidden');
-            document.getElementById('auth-view').classList.remove('hidden');
-            document.getElementById('main-app-view').classList.add('hidden');
-        }
-
-        function showMainApp() {
-            document.getElementById('loading').classList.add('hidden');
-            document.getElementById('auth-view').classList.add('hidden');
-            document.getElementById('main-app-view').classList.remove('hidden');
-        }
-
-        // --- Role Management ---
-        async function checkUserRole(userId) {
-            // Check if the user ID exists in the 'admins' collection
-            const adminDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'admins', userId);
-            const adminDoc = await getDoc(adminDocRef);
-            
-            if (adminDoc.exists()) {
-                userRole = 'admin';
-                document.getElementById('app-title').textContent = 'Admin Dashboard';
-                document.getElementById('create-ticket-section').classList.add('hidden');
-            } else {
-                userRole = 'user';
-                document.getElementById('app-title').textContent = 'User Dashboard';
-                document.getElementById('create-ticket-section').classList.remove('hidden');
-            }
-        }
-        
-        // --- Authentication Functions ---
-        document.getElementById('show-login').addEventListener('click', () => {
-            document.getElementById('auth-submit').textContent = 'Login';
-        });
-
-        document.getElementById('show-register').addEventListener('click', () => {
-            document.getElementById('auth-submit').textContent = 'Register';
-        });
-
-        document.getElementById('auth-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('auth-email').value;
-            const password = document.getElementById('auth-password').value;
-            const submitBtn = document.getElementById('auth-submit');
-            const messageEl = document.getElementById('auth-message');
-            messageEl.textContent = '';
-            showLoading();
-
-            try {
-                if (submitBtn.textContent === 'Register') {
-                    await createUserWithEmailAndPassword(auth, email, password);
-                } else {
-                    await signInWithEmailAndPassword(auth, email, password);
-                }
-            } catch (error) {
-                messageEl.textContent = `Error: ${error.message}`;
-            } finally {
-                showAuthView();
-            }
-        });
-
-        document.getElementById('logout-btn').addEventListener('click', async () => {
-            try {
-                await signOut(auth);
-            } catch (error) {
-                console.error("Logout failed:", error);
-            }
-        });
-
-        // --- Ticket Management Functions ---
-        document.getElementById('create-ticket-btn').addEventListener('click', async () => {
-            const ticketText = document.getElementById('ticket-text').value;
-            const messageEl = document.getElementById('ticket-message');
-
-            if (ticketText.trim() === '') {
-                messageEl.textContent = 'Ticket message cannot be empty.';
-                return;
-            }
-
-            try {
-                const userId = auth.currentUser.uid;
-                const ticketsCollection = collection(db, 'artifacts', appId, 'public', 'data', 'tickets');
-                await addDoc(ticketsCollection, {
-                    userId: userId,
-                    text: ticketText,
-                    timestamp: new Date(),
-                });
-                document.getElementById('ticket-text').value = '';
-                messageEl.textContent = '';
-                // No need to fetch tickets manually, onSnapshot will handle it.
-            } catch (error) {
-                console.error("Error creating ticket:", error);
-                messageEl.textContent = `Error creating ticket: ${error.message}`;
-            }
-        });
-
-        async function deleteTicket(ticketId) {
-            // Only allow deletion if the current user is an admin
-            if (userRole === 'admin') {
-                try {
-                    const ticketDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'tickets', ticketId);
-                    await deleteDoc(ticketDocRef);
-                    // No need to fetch tickets manually, onSnapshot will handle it.
-                } catch (error) {
-                    console.error("Error deleting ticket:", error);
-                    alert("Error deleting ticket. See console for details.");
-                }
-            } else {
-                alert("You do not have permission to delete this ticket.");
-            }
-        }
-
-        async function fetchTickets() {
-            const ticketsListEl = document.getElementById('tickets-list');
-            const noTicketsEl = document.getElementById('no-tickets');
-
-            // Construct the query based on the user's role
-            let ticketsQuery;
-            const ticketsCollection = collection(db, 'artifacts', appId, 'public', 'data', 'tickets');
-            
-            if (userRole === 'admin') {
-                // Admin can see all tickets
-                ticketsQuery = query(ticketsCollection, orderBy('timestamp', 'desc'));
-            } else {
-                // Regular user can only see their own tickets
-                const userId = auth.currentUser.uid;
-                // Note: Firestore security rules should be configured to prevent users from
-                // reading other users' tickets, even if the client-side code tries to.
-                ticketsQuery = query(ticketsCollection, where('userId', '==', userId), orderBy('timestamp', 'desc'));
-            }
-
-            // Set up a real-time listener
-            onSnapshot(ticketsQuery, (snapshot) => {
-                const tickets = [];
-                snapshot.forEach((doc) => {
-                    const data = doc.data();
-                    tickets.push({ id: doc.id, ...data });
-                });
-
-                ticketsListEl.innerHTML = ''; // Clear previous tickets
-                if (tickets.length === 0) {
-                    noTicketsEl.classList.remove('hidden');
-                } else {
-                    noTicketsEl.classList.add('hidden');
-                    tickets.forEach(ticket => {
-                        const ticketItem = document.createElement('div');
-                        ticketItem.classList.add('bg-white', 'p-6', 'rounded-lg', 'shadow-md', 'border', 'border-gray-200');
-                        
-                        const date = ticket.timestamp?.toDate ? ticket.timestamp.toDate().toLocaleString() : new Date().toLocaleString();
-                        
-                        ticketItem.innerHTML = `
-                            <p class="text-sm text-gray-400"><strong>User ID:</strong> ${ticket.userId}</p>
-                            <p class="text-gray-800 mt-2">${ticket.text}</p>
-                            <div class="flex items-center justify-between mt-4">
-                                <span class="text-xs text-gray-500">${date}</span>
-                                ${userRole === 'admin' ? `<button class="delete-btn btn bg-red-600 hover:bg-red-700 text-sm" data-id="${ticket.id}">Delete</button>` : ''}
-                            </div>
-                        `;
-                        ticketsListEl.appendChild(ticketItem);
-                    });
-                    
-                    // Add event listeners for delete buttons
-                    ticketsListEl.querySelectorAll('.delete-btn').forEach(button => {
-                        button.addEventListener('click', () => {
-                            const ticketId = button.getAttribute('data-id');
-                            deleteTicket(ticketId);
-                        });
-                    });
-                }
-            });
-        }
-
-        // --- App Initialization ---
-        window.onload = function() {
-            setupFirebaseAndAuth();
-        };
-
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>
