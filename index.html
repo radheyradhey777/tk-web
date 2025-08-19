@@ -1,10 +1,203 @@
 <!DOCTYPE html>
-<html>
-<body>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Ticket System</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script type="module">
 
-    <a href="https://example.com" id="myLink">Visit Example Website</a>
+    // ================== FIREBASE IMPORTS ==================
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { 
+      getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, 
+      signOut, onAuthStateChanged 
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { 
+      getFirestore, doc, setDoc, getDoc, collection, addDoc, query, where, 
+      onSnapshot, serverTimestamp 
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-    <script src="script.js"></script>
+    // ================== FIREBASE CONFIG ==================
+    const firebaseConfig = {
+      apiKey: "AIzaSyAGXN6dWthp8Z4aYP7JvW38O32aG8KRGR4",
+      authDomain: "ticket-web-9fa9e.firebaseapp.com",
+      projectId: "ticket-web-9fa9e",
+      storageBucket: "ticket-web-9fa9e.firebasestorage.app",
+      messagingSenderId: "801985358951",
+      appId: "1:801985358951:web:29e558c044ecaaa5c8f8c2"
+    };
 
+    // ================== FIREBASE INIT ==================
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let currentUser = null;
+    let currentRole = "user";
+
+    // ================== AUTH FUNCTIONS ==================
+    async function register() {
+      const email = document.getElementById("email").value;
+      const pass = document.getElementById("password").value;
+      const userCred = await createUserWithEmailAndPassword(auth, email, pass);
+      await setDoc(doc(db, "users", userCred.user.uid), {
+        email: email,
+        role: "user"
+      });
+      alert("✅ Registered successfully!");
+    }
+
+    async function login() {
+      const email = document.getElementById("email").value;
+      const pass = document.getElementById("password").value;
+      await signInWithEmailAndPassword(auth, email, pass);
+    }
+
+    function logout() {
+      signOut(auth);
+    }
+
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        currentUser = user;
+        const snap = await getDoc(doc(db, "users", user.uid));
+        currentRole = snap.exists() ? snap.data().role : "user";
+        document.getElementById("roleInfo").innerText = 
+          `Logged in as: ${user.email} (Role: ${currentRole})`;
+
+        document.getElementById("authSection").classList.add("hidden");
+        document.getElementById("dashboard").classList.remove("hidden");
+        loadTickets();
+      } else {
+        currentUser = null;
+        document.getElementById("authSection").classList.remove("hidden");
+        document.getElementById("dashboard").classList.add("hidden");
+      }
+    });
+
+    // ================== TICKET FUNCTIONS ==================
+    async function createTicket() {
+      const title = document.getElementById("ticketTitle").value;
+      if (!title) return alert("Enter ticket title");
+      await addDoc(collection(db, "tickets"), {
+        title: title,
+        userId: currentUser.uid,
+        status: "open",
+        created: serverTimestamp()
+      });
+      document.getElementById("ticketTitle").value = "";
+    }
+
+    function loadTickets() {
+      let q;
+      if (currentRole === "admin") {
+        q = query(collection(db, "tickets"));
+      } else {
+        q = query(collection(db, "tickets"), where("userId", "==", currentUser.uid));
+      }
+
+      onSnapshot(q, (snapshot) => {
+        const ticketsDiv = document.getElementById("tickets");
+        ticketsDiv.innerHTML = "";
+        snapshot.forEach((docSnap) => {
+          const t = docSnap.data();
+          const div = document.createElement("div");
+          div.className = "p-3 border rounded bg-gray-50";
+          div.innerHTML = `
+            <p class="font-bold">${t.title} 
+              <span class="text-sm text-gray-500">(${t.status})</span></p>
+            <button onclick="openChat('${docSnap.id}')" 
+              class="bg-blue-500 text-white px-2 py-1 rounded mt-2">💬 Open Chat</button>
+          `;
+          ticketsDiv.appendChild(div);
+        });
+      });
+    }
+
+    // ================== CHAT ==================
+    window.openChat = function(ticketId) {
+      const chatWin = window.open("", "Chat", "width=400,height=500");
+      chatWin.document.write(`
+        <h2>Chat for Ticket: ${ticketId}</h2>
+        <div id="messages" style="height:300px;overflow:auto;border:1px solid gray;margin-bottom:10px;"></div>
+        <input id="msgInput" type="text" placeholder="Type message..." style="width:80%;">
+        <button onclick="sendMessage()">Send</button>
+        <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"><\/script>
+        <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"><\/script>
+        <script>
+          const firebaseConfig = ${JSON.stringify(firebaseConfig)};
+          firebase.initializeApp(firebaseConfig);
+          const db = firebase.firestore();
+          const ticketId = "${ticketId}";
+          const userId = "${currentUser ? currentUser.uid : ''}";
+          const messagesDiv = document.getElementById("messages");
+
+          db.collection("tickets").doc(ticketId).collection("messages")
+            .orderBy("timestamp")
+            .onSnapshot(snap => {
+              messagesDiv.innerHTML = "";
+              snap.forEach(doc => {
+                const m = doc.data();
+                const p = document.createElement("p");
+                p.textContent = m.sender + ": " + m.text;
+                messagesDiv.appendChild(p);
+              });
+            });
+
+          function sendMessage() {
+            const input = document.getElementById("msgInput");
+            if (!input.value) return;
+            db.collection("tickets").doc(ticketId).collection("messages").add({
+              text: input.value,
+              sender: userId,
+              timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            input.value = "";
+          }
+        <\/script>
+      `);
+    }
+
+    // expose functions
+    window.register = register;
+    window.login = login;
+    window.logout = logout;
+    window.createTicket = createTicket;
+
+  </script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+
+<div id="app" class="w-full max-w-3xl bg-white p-6 rounded-2xl shadow-lg">
+  <h1 class="text-2xl font-bold text-center mb-4">🎫 Ticket System</h1>
+
+  <!-- Login/Register -->
+  <div id="authSection">
+    <input id="email" type="email" placeholder="Email" class="border p-2 w-full mb-2">
+    <input id="password" type="password" placeholder="Password" class="border p-2 w-full mb-2">
+    <button onclick="register()" class="bg-green-500 text-white px-4 py-2 rounded">Register</button>
+    <button onclick="login()" class="bg-blue-500 text-white px-4 py-2 rounded ml-2">Login</button>
+  </div>
+
+  <!-- Dashboard -->
+  <div id="dashboard" class="hidden">
+    <div class="flex justify-between mb-4">
+      <h2 class="text-xl font-semibold">Dashboard</h2>
+      <button onclick="logout()" class="bg-red-500 text-white px-4 py-2 rounded">Logout</button>
+    </div>
+
+    <div id="roleInfo" class="mb-4 text-gray-600"></div>
+
+    <!-- Create Ticket -->
+    <div class="mb-6">
+      <input id="ticketTitle" type="text" placeholder="Ticket Title" class="border p-2 w-full mb-2">
+      <button onclick="createTicket()" class="bg-indigo-500 text-white px-4 py-2 rounded">Create Ticket</button>
+    </div>
+
+    <!-- Ticket List -->
+    <h3 class="text-lg font-bold mb-2">Tickets</h3>
+    <div id="tickets" class="space-y-2"></div>
+  </div>
+</div>
 </body>
 </html>
