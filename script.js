@@ -5,7 +5,7 @@ const myLink = document.getElementById('myLink');
 console.log("The link's URL is:", myLink.href);
 
 // 3. Change the link's URL to a Pterodactyl panel URL
-myLink.href = 'https://panel.example.com';
+myLink.href = 'https://gpanel.coramtix.in/';
 
 // 4. Change the text of the link
 myLink.textContent = 'Go to Pterodactyl Panel';
